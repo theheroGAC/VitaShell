@@ -97,6 +97,9 @@
 - **UI Testing**: Comprehensive menu interaction testing
 - **Performance Testing**: Memory usage and load times optimized
 
+#### Translations
+- **Updated Japanese Translation**: Special thanks to yyoossk for improving Japanese localization
+
 ### Credits & Acknowledgments
 
 - **Original Author**: TheFloW - Creator of VitaShell

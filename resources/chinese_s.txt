@@ -1,4 +1,4 @@
-﻿# VitaShell language file
+# VitaShell language file
 
 # General strings
 ERROR                                = "错误 0x%08X."
@@ -222,3 +222,4 @@ UPDATE_QUESTION                      = "VitaShell %s 已可用.\\是否升级本
 ARCHIVE_NAME                         = "压缩包名称"
 COMPRESSION_LEVEL                    = "压缩等级 (0-9)"
 ENTER_PASSWORD                       = "请输入密码"
+LANGUAGE_CHANGED_RESTART_MSG = "语言已更改。重启 VitaShell 以应用。"

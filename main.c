@@ -86,6 +86,12 @@ static SceUID usbdevice_modid = -1;
 
 static SceKernelLwMutexWork dialog_mutex;
 
+// Last installed app Title ID for launching
+char last_installed_titleid[12] = "";
+
+// Flag for direct launch mode (skip confirmation dialog)
+volatile int is_direct_launch = 0;
+
 char vita_ip[16];
 unsigned short int vita_port;
 
@@ -315,7 +321,6 @@ int dialogSteps() {
 
   switch (getDialogStep()) {
     case DIALOG_STEP_ERROR:
-    case DIALOG_STEP_INFO:
     case DIALOG_STEP_SYSTEM:
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_NONE ||
@@ -326,7 +331,41 @@ int dialogSteps() {
 
       break;
     }
-    
+
+    case DIALOG_STEP_INFO:
+    {
+      if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
+        // If we just completed an installation, ask about launching app
+        if (last_installed_titleid[0] != '\0') {
+          initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[RUN_APP_AFTER_INSTALL]);
+          setDialogStep(DIALOG_STEP_RUN_APP_QUESTION);
+        } else {
+          refresh = REFRESH_MODE_NORMAL;
+          setDialogStep(DIALOG_STEP_NONE);
+        }
+      }
+
+      break;
+    }
+
+    case DIALOG_STEP_RUN_APP_QUESTION:
+    {
+      if (msg_result == MESSAGE_DIALOG_RESULT_YES) {
+        // Launch the installed app/game
+        if (last_installed_titleid[0] != '\0') {
+          launchAppByUriExit(last_installed_titleid);
+        }
+        setDialogStep(DIALOG_STEP_NONE);
+      } else if (msg_result == MESSAGE_DIALOG_RESULT_NO) {
+        // User declined to launch - just return to file browser normally
+        refresh = REFRESH_MODE_NORMAL;
+        setDialogStep(DIALOG_STEP_NONE);
+        is_direct_launch = 0; // Reset flag
+      }
+
+      break;
+    }
+
     case DIALOG_STEP_CANCELED:
       refresh = REFRESH_MODE_NORMAL;
       setDialogStep(DIALOG_STEP_NONE);
@@ -917,23 +956,31 @@ int dialogSteps() {
           break;
         }
 
-        // Set refresh first, then show success message
+        // Set refresh first
         refresh = REFRESH_MODE_NORMAL;
-        
-        // Safety check for language container
-        const char *success_msg = "Installation completed successfully."; // fallback
-        if (INSTALL_COMPLETE_SUCCESS < LANGUAGE_CONTAINER_SIZE && 
-            language_container[INSTALL_COMPLETE_SUCCESS] != NULL) {
-          success_msg = language_container[INSTALL_COMPLETE_SUCCESS];
+
+        // Skip success message - go directly to run app question
+        // Only ask about launching if we have a valid titleid
+        if (last_installed_titleid[0] != '\0') {
+          // If direct launch mode (come from "Launch app/game" menu), skip dialog and launch directly
+          if (is_direct_launch) {
+            is_direct_launch = 0; // Reset flag
+            launchAppByUriExit(last_installed_titleid);
+            setDialogStep(DIALOG_STEP_NONE);
+          } else {
+            initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[RUN_APP_AFTER_INSTALL]);
+            setDialogStep(DIALOG_STEP_RUN_APP_QUESTION);
+          }
+        } else {
+          // No valid titleid (shouldn't happen, but fallback)
+          setDialogStep(DIALOG_STEP_NONE);
+          is_direct_launch = 0; // Reset flag anyway
         }
-        
-        initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_OK, success_msg);
-        setDialogStep(DIALOG_STEP_INFO);
       }
 
       break;
     }
-    
+
     case DIALOG_STEP_UPDATE_QUESTION:
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_YES) {

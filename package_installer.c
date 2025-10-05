@@ -28,6 +28,9 @@
 #include "sha1.h"
 #include <psp2/sysmodule.h>
 
+// External variable from main.c
+extern char last_installed_titleid[12];
+
 INCLUDE_EXTERN_RESOURCE(head_bin);
 
 static int loadScePaf() {
@@ -250,6 +253,9 @@ int makeHeadBin() {
   char titleid[12];
   memset(titleid, 0, sizeof(titleid));
   getSfoString(sfo_buffer, "TITLE_ID", titleid, sizeof(titleid));
+
+  // Save title id for post-installation launching
+  strcpy(last_installed_titleid, titleid);
 
   // Enforce TITLE_ID format
   if (TITLEID_FMT_CHECK(titleid))

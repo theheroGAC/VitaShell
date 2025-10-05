@@ -31,6 +31,10 @@
 #include "usb.h"
 #include "pfs.h"
 
+// External variables from main.c
+extern char last_installed_titleid[12];
+extern volatile int is_direct_launch;
+
 
 enum MenuHomeEntrys {
   MENU_HOME_ENTRY_REFRESH_LIVEAREA,
@@ -73,6 +77,7 @@ enum MenuMainEntrys {
   MENU_MAIN_ENTRY_DELETE,
   MENU_MAIN_ENTRY_RENAME,
   MENU_MAIN_ENTRY_PROPERTIES,
+  MENU_MAIN_ENTRY_LAUNCH_APP,
   MENU_MAIN_ENTRY_NEW,
   MENU_MAIN_ENTRY_SORT_BY,
   MENU_MAIN_ENTRY_MORE,
@@ -89,6 +94,7 @@ MenuEntry menu_main_entries[] = {
   { DELETE,         7, 0, CTX_INVISIBLE },
   { RENAME,         8, 0, CTX_INVISIBLE },
   { PROPERTIES,     10, 0, CTX_INVISIBLE },
+  { LAUNCH_APP_GAME, 11, 0, CTX_INVISIBLE },
   { NEW,            12, CTX_FLAG_MORE, CTX_VISIBLE },
   { SORT_BY,        13, CTX_FLAG_MORE, CTX_VISIBLE },
   { MORE,           14, CTX_FLAG_MORE, CTX_INVISIBLE },
@@ -444,6 +450,11 @@ void setContextMenuMainVisibilities() {
 
     if (!checkFolderExist(path))
       menu_main_entries[MENU_MAIN_ENTRY_OPEN_DECRYPTED].visibility = CTX_INVISIBLE;
+  }
+
+  // Launch app/game only visible for VPK files
+  if (file_entry->type != FILE_TYPE_VPK) {
+    menu_main_entries[MENU_MAIN_ENTRY_LAUNCH_APP].visibility = CTX_INVISIBLE;
   }
 
   // Go to first entry
@@ -1073,6 +1084,30 @@ static int contextMenuMainEnterCallback(int sel, void *context) {
       if (file_entry) {
         snprintf(cur_file, MAX_PATH_LENGTH, "%s%s", file_list.path, file_entry->name);
         initPropertyDialog(cur_file, file_entry);
+      }
+
+      break;
+    }
+
+    case MENU_MAIN_ENTRY_LAUNCH_APP:
+    {
+      FileListEntry *file_entry = fileListGetNthEntry(&file_list, base_pos + rel_pos);
+      if (file_entry && !file_entry->is_folder) {
+        int type = getFileType(file_entry->name);
+        if (type == FILE_TYPE_VPK) {
+          // For launch app, install directly without asking and launch after
+          snprintf(cur_file, MAX_PATH_LENGTH, "%s%s", file_list.path, file_entry->name);
+
+          // Clear any previous titleid to avoid confusion
+          memset(last_installed_titleid, 0, sizeof(last_installed_titleid));
+
+          // Set direct launch flag
+          is_direct_launch = 1;
+
+          // Start installation directly
+          initMessageDialog(MESSAGE_DIALOG_PROGRESS_BAR, language_container[INSTALLING]);
+          setDialogStep(DIALOG_STEP_INSTALL_CONFIRMED);
+        }
       }
 
       break;

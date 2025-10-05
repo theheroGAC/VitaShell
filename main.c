@@ -123,9 +123,11 @@ void drawScrollBar(int pos, int n) {
 void drawShellInfo(const char *path) {
   // Title
   char version[8];
-  sprintf(version, "%X.%02X", VITASHELL_VERSION_MAJOR, VITASHELL_VERSION_MINOR);
-  if (version[3] == '0')
-    version[3] = '\0';
+  sprintf(version, "%d.%02d", VITASHELL_VERSION_MAJOR, VITASHELL_VERSION_MINOR);
+  // Fix: don't truncate if minor version has trailing zero (like 2.10)
+  if (version[strlen(version)-1] == '0' && version[strlen(version)-2] != '.') {
+    version[strlen(version)-1] = '\0';
+  }
 
   pgf_draw_textf(SHELL_MARGIN_X, SHELL_MARGIN_Y, TITLE_COLOR, "VitaShell %s", version);
 
@@ -935,13 +937,16 @@ int dialogSteps() {
     case DIALOG_STEP_UPDATE_QUESTION:
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_YES) {
-        initMessageDialog(MESSAGE_DIALOG_PROGRESS_BAR, language_container[DOWNLOADING]);
-        setDialogStep(DIALOG_STEP_DOWNLOADING);
+        settingsAgree();  // X restarts VitaShell
+        setDialogStep(DIALOG_STEP_NONE);
       } else if (msg_result == MESSAGE_DIALOG_RESULT_NO) {
+        settingsDisagree();  // O stays in VitaShell
         setDialogStep(DIALOG_STEP_NONE);
       }
+
+      break;
     }
-    
+
     case DIALOG_STEP_DOWNLOADED:
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
@@ -959,17 +964,17 @@ int dialogSteps() {
     
     case DIALOG_STEP_SETTINGS_AGREEMENT:
     {
-      if (msg_result == MESSAGE_DIALOG_RESULT_YES) {
-        settingsAgree();
+      if (msg_result == MESSAGE_DIALOG_RESULT_NO) {
+        settingsAgree();  // O closes VitaShell and restarts
         setDialogStep(DIALOG_STEP_NONE);
-      } else if (msg_result == MESSAGE_DIALOG_RESULT_NO) {
-        settingsDisagree();
+      } else if (msg_result == MESSAGE_DIALOG_RESULT_YES) {
+        settingsDisagree();  // X goes back to VitaShell
         setDialogStep(DIALOG_STEP_NONE);
       } else if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
         settingsAgree();
         setDialogStep(DIALOG_STEP_NONE);
       }
-      
+
       break;
     }
     

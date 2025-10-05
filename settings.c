@@ -46,7 +46,11 @@ static char **theme_options = NULL;
 static int theme_count = 0;
 static char *theme_name = NULL;
 
+static int language_changed = 0; // Flag to track language changes
+static char *language_options[19]; // Complete language options array
+
 static ConfigEntry settings_entries[] = {
+  { "LANGUAGE",            CONFIG_TYPE_DECIMAL, (int *)&language },
   { "USBDEVICE",          CONFIG_TYPE_DECIMAL, (int *)&vitashell_config.usbdevice },
   { "SELECT_BUTTON",      CONFIG_TYPE_DECIMAL, (int *)&vitashell_config.select_button },
   { "DISABLE_AUTOUPDATE", CONFIG_TYPE_BOOLEAN, (int *)&vitashell_config.disable_autoupdate },
@@ -58,7 +62,8 @@ static ConfigEntry theme_entries[] = {
 };
 
 SettingsMenuOption main_settings[] = {
-  // { VITASHELL_SETTINGS_LANGUAGE,     SETTINGS_OPTION_TYPE_BOOLEAN, NULL, NULL, 0, NULL, 0, &language },
+  // { VITASHELL_SETTINGS_LANGUAGE,     SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0,
+  //   language_options, sizeof(language_options) / sizeof(char *), &language },
   { VITASHELL_SETTINGS_THEME,           SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0, NULL, 0, NULL },
   
   { VITASHELL_SETTINGS_USBDEVICE,       SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0,
@@ -77,8 +82,14 @@ SettingsMenuOption power_settings[] = {
   { VITASHELL_SETTINGS_STANDBY,   SETTINGS_OPTION_TYPE_CALLBACK, (void *)suspendDevice, NULL, 0, NULL, 0, NULL },
 };
 
+SettingsMenuOption language_settings[] = {
+  { VITASHELL_SETTINGS_LANGUAGE,  SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0,
+    language_options, 12, &language }, // Only 12 languages actually set
+};
+
 SettingsMenuEntry vitashell_settings_menu_entries[] = {
   { VITASHELL_SETTINGS_MAIN,  main_settings,  sizeof(main_settings) / sizeof(SettingsMenuOption) },
+  { VITASHELL_SETTINGS_LANGUAGE, language_settings, sizeof(language_settings) / sizeof(SettingsMenuOption) },
   { VITASHELL_SETTINGS_POWER, power_settings, sizeof(power_settings) / sizeof(SettingsMenuOption) },
 };
 
@@ -138,9 +149,24 @@ void initSettingsMenu() {
 
   select_button_options[0] = language_container[VITASHELL_SETTINGS_SELECT_BUTTON_USB];
   select_button_options[1] = language_container[VITASHELL_SETTINGS_SELECT_BUTTON_FTP];
-  
+
+  // Language options - must match lang[] array in language.c order!
+  language_options[0] = "Japanese";       // matches lang[0]
+  language_options[1] = "English/US";     // matches lang[1]
+  language_options[2] = "French";         // matches lang[2]
+  language_options[3] = "Spanish";        // matches lang[3]
+  language_options[4] = "German";         // matches lang[4]
+  language_options[5] = "Italian";        // matches lang[5]
+  language_options[6] = "Dutch";          // matches lang[6]
+  language_options[7] = "Portuguese";     // matches lang[7]
+  language_options[8] = "Russian";        // matches lang[8]
+  language_options[9] = "Korean";         // matches lang[9]
+  language_options[10] = "Chinese (Trad)";// matches lang[10]
+  language_options[11] = "Chinese (Simp)";// matches lang[11]
+  // Set only first 12 options, rest unused for now
+
   theme_options = malloc(MAX_THEMES * sizeof(char *));
-  
+
   for (i = 0; i < MAX_THEMES; i++)
     theme_options[i] = malloc(MAX_THEME_LENGTH);
 }
@@ -209,11 +235,21 @@ void closeSettingsMenu() {
   // Save settings
   if (changed) {
     saveSettingsConfig();
-      
+
     // Save theme config file
     theme_entries[0].value = &theme_options[theme];
     writeConfig("ux0:VitaShell/theme/theme.txt", theme_entries, sizeof(theme_entries) / sizeof(ConfigEntry));
     theme_entries[0].value = (void *)&theme_name;
+  }
+
+  // If language changed, ask for restart
+  if (language_changed) {
+    // Reset flag
+    language_changed = 0;
+
+    // Show language restart message (translated)
+    initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[LANGUAGE_CHANGED_RESTART_MSG]);
+    setDialogStep(DIALOG_STEP_SETTINGS_AGREEMENT);
   }
 }
 
@@ -343,6 +379,8 @@ void settingsMenuCtrl() {
       case SETTINGS_OPTION_TYPE_OPTIONS:
       {
         if (option->value) {
+          int old_value = *(option->value);
+
           if (pressed_pad[PAD_LEFT]) {
             if (*(option->value) > 0)
               (*(option->value))--;
@@ -354,8 +392,13 @@ void settingsMenuCtrl() {
             else
               *(option->value) = 0;
           }
+
+          // Track if language changed
+          if (option->name == VITASHELL_SETTINGS_LANGUAGE && old_value != *(option->value)) {
+            language_changed = 1;
+          }
         }
-        
+
         break;
       }
     }

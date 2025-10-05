@@ -87,6 +87,9 @@ static int update_thread(SceSize args_size, UpdateArguments *args) {
   }
 
   while (current_value < args->max && isMessageDialogRunning()) {
+    // Update current time
+    cur_micros = sceKernelGetProcessTimeWide();
+
     // Always update progress bar - this is critical!
     if (args->max > 0) {
       uint32_t progress = (uint32_t)((current_value * 100) / args->max);
@@ -94,7 +97,7 @@ static int update_thread(SceSize args_size, UpdateArguments *args) {
         sceMsgDialogProgressBarSetValue(SCE_MSG_DIALOG_PROGRESSBAR_TARGET_BAR_DEFAULT, progress);
       }
     }
-    
+
     // Show speed info every 2 seconds to avoid lag
     if (args->show_kbs && cur_micros >= (last_micros + 2000 * 1000)) {
       delta_micros = cur_micros - last_micros;

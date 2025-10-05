@@ -353,7 +353,7 @@ int install_thread(SceSize args_size, InstallArguments *args) {
 
   // Set progress to 0%
   sceMsgDialogProgressBarSetValue(SCE_MSG_DIALOG_PROGRESSBAR_TARGET_BAR_DEFAULT, 0);
-  sceKernelDelayThread(DIALOG_WAIT); // Needed to see the percentage
+  sceKernelDelayThread(200 * 1000); // Further optimized to 200ms for even faster dialog opening
 
   // Recursively clean up pkg directory
   removePath(PACKAGE_DIR, NULL);
@@ -415,7 +415,7 @@ int install_thread(SceSize args_size, InstallArguments *args) {
       goto EXIT;
     }
     sceMsgDialogProgressBarSetValue(SCE_MSG_DIALOG_PROGRESSBAR_TARGET_BAR_DEFAULT, 50);
-    sceKernelDelayThread(COUNTUP_WAIT);
+    // No delay - immediately proceed for maximum speed
 
     isFolder = 1;
   } else {
@@ -534,7 +534,8 @@ int install_thread(SceSize args_size, InstallArguments *args) {
 
   // Set progress to 100%
   sceMsgDialogProgressBarSetValue(SCE_MSG_DIALOG_PROGRESSBAR_TARGET_BAR_DEFAULT, 100);
-  sceKernelDelayThread(COUNTUP_WAIT);
+  // Minimal delay for faster installation completion feedback
+  sceKernelDelayThread(25 * 1000); // Further reduced to 25ms
 
   // Close
   sceMsgDialogClose();

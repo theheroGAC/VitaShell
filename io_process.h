@@ -21,7 +21,7 @@
 
 #include "file.h"
 
-#define COUNTUP_WAIT 100 * 1000
+#define COUNTUP_WAIT 50 * 1000
 #define DIALOG_WAIT  900 * 1000
 
 enum CopyModes {

@@ -27,7 +27,18 @@
 
 #include "audio/vita_audio.h"
 
+INCLUDE_EXTERN_RESOURCE(chinese_s_txt);
+INCLUDE_EXTERN_RESOURCE(chinese_t_txt);
+INCLUDE_EXTERN_RESOURCE(dutch_txt);
 INCLUDE_EXTERN_RESOURCE(english_us_txt);
+INCLUDE_EXTERN_RESOURCE(french_txt);
+INCLUDE_EXTERN_RESOURCE(german_txt);
+INCLUDE_EXTERN_RESOURCE(italian_txt);
+INCLUDE_EXTERN_RESOURCE(japanese_txt);
+INCLUDE_EXTERN_RESOURCE(korean_txt);
+INCLUDE_EXTERN_RESOURCE(portuguese_txt);
+INCLUDE_EXTERN_RESOURCE(russian_txt);
+INCLUDE_EXTERN_RESOURCE(spanish_txt);
 
 INCLUDE_EXTERN_RESOURCE(theme_txt);
 
@@ -94,7 +105,18 @@ extern unsigned char _binary_modules_usbdevice_usbdevice_skprx_size;
 #define DEFAULT_FILE(path, name, replace) { path, (void *)&_binary_resources_##name##_start, (int)&_binary_resources_##name##_size, replace }
 
 static DefaultFile default_files[] = {
+  DEFAULT_FILE("ux0:VitaShell/language/chinese_s.txt", chinese_s_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/chinese_t.txt", chinese_t_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/dutch.txt", dutch_txt, 0),
   DEFAULT_FILE("ux0:VitaShell/language/english_us.txt", english_us_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/french.txt", french_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/german.txt", german_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/italian.txt", italian_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/japanese.txt", japanese_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/korean.txt", korean_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/portuguese.txt", portuguese_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/russian.txt", russian_txt, 0),
+  DEFAULT_FILE("ux0:VitaShell/language/spanish.txt", spanish_txt, 0),
 
   DEFAULT_FILE("ux0:VitaShell/theme/theme.txt", theme_txt, 0),
 

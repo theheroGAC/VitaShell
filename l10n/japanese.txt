@@ -158,7 +158,7 @@ REFRESH_LICENSE_DB_QUESTION          = "ライセンスデータベースのリ�
 # HENkaku settings strings
 HENKAKU_SETTINGS                     = "HENkaku設定"
 HENKAKU_ENABLE_PSN_SPOOFING          = "PSNの偽装を有効"
-HENKAKU_ENABLE_UNSAFE_HOMEBREW       = "安全ではないの自作ソフトのインストールを有効"
+HENKAKU_ENABLE_UNSAFE_HOMEBREW       = "安全ではない自作ソフトのインストールを有効"
 HENKAKU_ENABLE_VERSION_SPOOFING      = "バージョン偽装を有効"
 HENKAKU_SPOOFED_VERSION              = "偽装するバージョン"
 HENKAKU_RESTORE_DEFAULT_SETTINGS     = "既定の設定を復元"

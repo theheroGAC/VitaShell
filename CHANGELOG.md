@@ -1,3 +1,5 @@
+# GitHub cache buster - force refresh
+
 # VitaShell 2.12 (mod by theheroGAC)
 
 ## Major Release - Auto-Launch Suite & Enhanced Installation Workflows

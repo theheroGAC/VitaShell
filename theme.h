@@ -71,6 +71,8 @@ extern int TEXT_LINE_NUMBER_COLOR;
 extern int TEXT_LINE_NUMBER_COLOR_FOCUS;
 extern int TEXT_HIGHLIGHT_COLOR;
 
+extern int focus_color_options[6];
+
 // Photo viewer colors
 extern int PHOTO_ZOOM_COLOR;
 

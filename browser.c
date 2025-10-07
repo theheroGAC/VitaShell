@@ -535,6 +535,34 @@ static int fileBrowserMenuCtrl() {
                           vita_ip, vita_port);
         setDialogStep(DIALOG_STEP_FTP);
       }
+    } else if (vitashell_config.select_button == SELECT_BUTTON_MODE_QR && qr_used == 0) {
+      // Mark QR as used first time, then allow usage
+      qr_used = 1;
+
+      initQR();
+      if (enabledQR()) {
+        startQR();
+        initMessageDialog(MESSAGE_DIALOG_QR_CODE, language_container[QR_SCANNING]);
+        setDialogStep(DIALOG_STEP_QR);
+        // After first use, switch to USB in menu settings as well
+        vitashell_config.select_button = SELECT_BUTTON_MODE_USB;
+      }
+    } else if (vitashell_config.select_button == SELECT_BUTTON_MODE_QR && qr_used == 1) {
+      // QR already used, use USB as fallback so user can still choose USB/FTP in menu
+      if (isSafeMode()) {
+        infoDialog(language_container[EXTENDED_PERMISSIONS_REQUIRED]);
+      } else {
+        SceUdcdDeviceState state;
+        sceUdcdGetDeviceState(&state);
+
+        if (state.cable & SCE_UDCD_STATUS_CABLE_CONNECTED) {
+          initUsb();
+        } else {
+          initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_CANCEL,
+                            language_container[USB_NOT_CONNECTED]);
+          setDialogStep(DIALOG_STEP_USB_WAIT);
+        }
+      }
     }
   }
 
@@ -929,7 +957,7 @@ int browserMain() {
 
         // Current position
         if (i == rel_pos)
-          color = FOCUS_COLOR;
+          color = focus_color_options[vitashell_config.focus_color];
 
         // Marked
         if (fileListFindEntry(&mark_list, file_entry->name))

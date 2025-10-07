@@ -22,6 +22,7 @@
 #include "config.h"
 #include "theme.h"
 #include "utils.h"
+#include "vitashell_config.h"
 
 INCLUDE_EXTERN_RESOURCE(default_colors_txt);
 INCLUDE_EXTERN_RESOURCE(default_archive_icon_png);
@@ -121,6 +122,15 @@ vita2d_texture *previous_wallpaper_image = NULL, *current_wallpaper_image = NULL
 
 vita2d_pgf *font = NULL;
 char font_size_cache[256];
+
+int focus_color_options[6] = {
+  0xFF00FF00, // Default (Green)
+  0xFFD3D3D3, // Light Grey
+  0xFFFF0000, // Red
+  0xFF0000FF, // Blue
+  0xFFFFC0CB, // Pink
+  0xFF00FFFF  // Yellow (brighter)
+};
 
 typedef struct {
   char *name;

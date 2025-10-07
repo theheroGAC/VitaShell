@@ -161,7 +161,7 @@ void initSettingsMenu() {
   focus_color_options_texts[2] = language_container[VITASHELL_SETTINGS_FOCUS_COLOR_BLUE];
   focus_color_options_texts[3] = language_container[VITASHELL_SETTINGS_FOCUS_COLOR_RED];
   focus_color_options_texts[4] = language_container[VITASHELL_SETTINGS_FOCUS_COLOR_PINK];
-  focus_color_options_texts[5] = language_container[VITASHELL_SETTINGS_FOCUS_COLOR_CYAN];
+  focus_color_options_texts[5] = language_container[VITASHELL_SETTINGS_FOCUS_COLOR_YELLOW];
 
   // Language options - must match lang[] array in language.c order!
   language_options[0] = "Japanese";       // matches lang[0]

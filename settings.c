@@ -25,6 +25,7 @@
 #include "message_dialog.h"
 #include "ime_dialog.h"
 #include "utils.h"
+#include "network_update.h"
 
 static void restartShell();
 static void rebootDevice();
@@ -34,6 +35,21 @@ static void suspendDevice();
 static int changed = 0;
 static int theme = 0;
 int qr_used = 0; // Track if QR has been used once
+
+static volatile int auto_close_timer = 0;
+
+static void checkUpdates() {
+  // Close menu immediately
+  closeSettingsMenu();
+
+  // Start network update thread (it handles all UI internally)
+  // This reuses the existing auto-update logic which works reliably
+  SceUID thid = sceKernelCreateThread("network_update", (SceKernelThreadEntry)network_update_thread, 0x10000100, 0x10000, 0, 0, NULL);
+  if (thid >= 0)
+    sceKernelStartThread(thid, 0, NULL);
+
+  // Let the thread handle everything - no custom dialogs to avoid conflicts
+}
 
 static char spoofed_version[6];
 
@@ -77,6 +93,7 @@ SettingsMenuOption main_settings[] = {
     focus_color_options_texts, 6, &vitashell_config.focus_color }, // 6 colors
   { VITASHELL_SETTINGS_NO_AUTO_UPDATE,  SETTINGS_OPTION_TYPE_BOOLEAN, NULL, NULL, 0, NULL, 0, &vitashell_config.disable_autoupdate },
   { VITASHELL_SETTINGS_WARNING_MESSAGE, SETTINGS_OPTION_TYPE_BOOLEAN, NULL, NULL, 0, NULL, 0, &vitashell_config.disable_warning },
+  { VITASHELL_SETTINGS_CHECK_UPDATES,  SETTINGS_OPTION_TYPE_CALLBACK, (void *)checkUpdates, NULL, 0, NULL, 0, NULL },
 
   { VITASHELL_SETTINGS_RESTART_SHELL,   SETTINGS_OPTION_TYPE_CALLBACK, (void *)restartShell, NULL, 0, NULL, 0, NULL },
 };

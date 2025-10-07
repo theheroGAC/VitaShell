@@ -37,9 +37,20 @@ extern unsigned char _binary_resources_updater_eboot_bin_size;
 extern unsigned char _binary_resources_updater_param_bin_start;
 extern unsigned char _binary_resources_updater_param_bin_size;
 
+// Thread to auto-close the "no updates" message
+static int autoCloseNoUpdateThread(SceSize args, void *argp) {
+  sceKernelDelayThread(2500 * 1000L); // Wait 2.5 seconds
+  if (getDialogStep() == DIALOG_STEP_NONE) { // Still no dialog active
+    // Assume our message was shown and auto-close it
+    closeWaitDialog();
+  }
+  return sceKernelExitDeleteThread(0);
+}
+
 int network_update_thread(SceSize args, void *argp) {
   int64_t size = 0;
   long code = 0;
+  // Prepare the update check URL
   if (getDownloadFileInfo(BASE_ADDRESS VERSION_URL, &size, NULL, &code) >= 0 && size == sizeof(uint32_t)) {
     uint64_t value = 0;
   
@@ -85,12 +96,26 @@ int network_update_thread(SceSize args, void *argp) {
         }
 
         // Yes
-        return downloadFileProcess(BASE_ADDRESS "/VitaShell.vpk", VITASHELL_UPDATE_FILE, DIALOG_STEP_DOWNLOADED);
+        return downloadFileProcess(BASE_ADDRESS "/VitaShell.vpk?inline=false", VITASHELL_UPDATE_FILE, DIALOG_STEP_DOWNLOADED);
       }
     }
   }
 
 EXIT:
+  // If no update dialog was shown and we're coming from manual check,
+  // show "no updates available" message
+  if (getDialogStep() == DIALOG_STEP_NONE) {
+    initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_NONE, language_container[NO_UPDATES_AVAILABLE]);
+
+    // Auto-close after 2.5 seconds
+    SceUID closeThid = sceKernelCreateThread("auto_close_no_update",
+                                            (SceKernelThreadEntry)autoCloseNoUpdateThread,
+                                            0x10000100, 0x10000, 0, 0, NULL);
+    if (closeThid >= 0) {
+      sceKernelStartThread(closeThid, 0, NULL);
+    }
+  }
+
   return sceKernelExitDeleteThread(0);
 }
 

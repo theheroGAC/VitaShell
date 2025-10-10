@@ -374,6 +374,25 @@ int drawUncommonDialog() {
     
     if (uncommon_dialog.mode == MSG_DIALOG_MODE_QR_SCAN) {
       renderCameraQR(uncommon_dialog.x + 15, string_y + 10);
+
+      // Add QR UI enhancements
+      static float qr_animation = 0.0f;
+      updateQRAnimation(&qr_animation);
+
+      // Draw animated targeting frame centered on camera view
+      int frame_size = (int)(200 + qr_animation * 20); // Animated size
+      int center_x = uncommon_dialog.x + 15 + (CAM_WIDTH / 2) - (frame_size / 2);
+      int center_y = string_y + 10 + (CAM_HEIGHT / 2) - (frame_size / 2);
+      drawQRTargetingFrame(center_x, center_y, frame_size);
+
+      // Draw quality indicator if QR was recently scanned (centered)
+      char *last_qr = getLastQR();
+      if (last_qr && strlen(last_qr) > 0) {
+        QRQuality quality = getQRQuality(last_qr, strlen(last_qr));
+        int quality_x = uncommon_dialog.x + 15 + (CAM_WIDTH / 2) - 50; // Centered, 50px offset for 4 bars
+        drawQRQualityIndicator(quality_x, string_y + CAM_HEIGHT + 20, quality);
+      }
+
       string_y += CAM_HEIGHT;
     }
 

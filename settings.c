@@ -34,7 +34,7 @@ static void suspendDevice();
 
 static int changed = 0;
 static int theme = 0;
-int qr_used = 0; // Track if QR has been used once
+int qr_used = 0; // QR functionality always available - no usage restrictions
 
 static volatile int auto_close_timer = 0;
 
@@ -327,11 +327,7 @@ void drawSettingsMenu() {
     int j;
     int visible_count = 0;
     for (j = 0; j < settings_menu_entries[i].n_options; j++) {
-      // Skip QR option completely if used
-      if (options[j].name == VITASHELL_SETTINGS_SELECT_BUTTON && qr_used == 1 &&
-          options[j].value && *(options[j].value) == SELECT_BUTTON_MODE_QR) {
-        continue;
-      }
+      // QR option always available - no longer skip after first use
 
       // Count visible options for proper selection index
       visible_count++;
@@ -390,31 +386,11 @@ void settingsDisagree() {
 }
 
 void settingsMenuCtrl() {
-  // Calculate visible options count for current entry (skipping QR if used)
-  int visible_option_count = 0;
-  int total_options = settings_menu_entries[settings_menu.entry_sel].n_options;
-  for (int j = 0; j < total_options; j++) {
-    SettingsMenuOption *opt = &settings_menu_entries[settings_menu.entry_sel].options[j];
-    if (!(opt->name == VITASHELL_SETTINGS_SELECT_BUTTON && qr_used == 1 &&
-          opt->value && *(opt->value) == SELECT_BUTTON_MODE_QR)) {
-      visible_option_count++;
-    }
-  }
+  // Calculate visible options count for current entry (QR always available)
+  int visible_option_count = settings_menu_entries[settings_menu.entry_sel].n_options;
 
   // Find the actual option index from visible selection
-  int actual_option_index = -1;
-  int visible_index = 0;
-  for (int j = 0; j < total_options; j++) {
-    SettingsMenuOption *opt = &settings_menu_entries[settings_menu.entry_sel].options[j];
-    if (!(opt->name == VITASHELL_SETTINGS_SELECT_BUTTON && qr_used == 1 &&
-          opt->value && *(opt->value) == SELECT_BUTTON_MODE_QR)) {
-      if (visible_index == settings_menu.option_sel) {
-        actual_option_index = j;
-        break;
-      }
-      visible_index++;
-    }
-  }
+  int actual_option_index = settings_menu.option_sel;
 
   if (actual_option_index == -1) {
     // Safety: reset selection if something went wrong
@@ -455,23 +431,17 @@ void settingsMenuCtrl() {
           int old_value = *(option->value);
 
           if (option->name == VITASHELL_SETTINGS_SELECT_BUTTON) {
-            // Special cycling for SELECT_BUTTON: skip QR if used
-            int max_visible = qr_used ? 1 : 2; // 2 options if QR not used (0,1), 1 option if used (0,1 but skip 2)
-
+            // Normal cycling for SELECT_BUTTON: QR always available
             if (pressed_pad[PAD_LEFT]) {
-              do {
-                if (*(option->value) > 0)
-                  (*(option->value))--;
-                else
-                  *(option->value) = max_visible;
-              } while (qr_used && *(option->value) == 2); // Skip QR if hidden
+              if (*(option->value) > 0)
+                (*(option->value))--;
+              else
+                *(option->value) = 2; // 3 options: 0=USB, 1=FTP, 2=QR
             } else if (pressed_pad[PAD_ENTER] || pressed_pad[PAD_RIGHT]) {
-              do {
-                if (*(option->value) < max_visible)
-                  (*(option->value))++;
-                else
-                  *(option->value) = 0;
-              } while (qr_used && *(option->value) == 2); // Skip QR if hidden
+              if (*(option->value) < 2)
+                (*(option->value))++;
+              else
+                *(option->value) = 0;
             }
           } else {
             // Normal cycling for other options
@@ -505,16 +475,8 @@ void settingsMenuCtrl() {
       settings_menu.option_sel--;
     } else if (settings_menu.entry_sel > 0) {
       settings_menu.entry_sel--;
-      // Calculate visible options for previous entry
-      int prev_visible_count = 0;
-      for (int j = 0; j < settings_menu_entries[settings_menu.entry_sel].n_options; j++) {
-        SettingsMenuOption *opt = &settings_menu_entries[settings_menu.entry_sel].options[j];
-        if (!(opt->name == VITASHELL_SETTINGS_SELECT_BUTTON && qr_used == 1 &&
-              opt->value && *(opt->value) == SELECT_BUTTON_MODE_QR)) {
-          prev_visible_count++;
-        }
-      }
-      settings_menu.option_sel = prev_visible_count - 1;
+      // Set to last option of previous entry
+      settings_menu.option_sel = settings_menu_entries[settings_menu.entry_sel].n_options - 1;
     }
   } else if (hold_pad[PAD_DOWN] || hold2_pad[PAD_LEFT_ANALOG_DOWN]) {
     if (settings_menu.option_sel < visible_option_count - 1) {

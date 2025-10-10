@@ -110,6 +110,8 @@ int AUDIO_TIME_TOTAL;
 int AUDIO_TIME_BAR;
 int AUDIO_TIME_BAR_BG;
 
+// QR Scanner colors are defined directly in qr.c for compatibility
+
 vita2d_texture *folder_icon = NULL, *folder_symlink_icon = NULL, *file_icon = NULL,*file_symlink_icon = NULL, *archive_icon =NULL, *image_icon = NULL,
     *audio_icon = NULL, *sfo_icon = NULL, *text_icon = NULL,
          *ftp_image = NULL, *dialog_image = NULL, *context_image = NULL, *context_more_image = NULL, *settings_image = NULL, *battery_image = NULL,
@@ -241,6 +243,8 @@ void loadTheme() {
     COLOR_ENTRY(AUDIO_TIME_TOTAL),
     COLOR_ENTRY(AUDIO_TIME_BAR),
     COLOR_ENTRY(AUDIO_TIME_BAR_BG),
+
+    // QR Scanner colors are defined directly in qr.c for compatibility
   };
 
   int i;

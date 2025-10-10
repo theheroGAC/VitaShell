@@ -34,4 +34,25 @@ char *getLastQR();
 char *getLastDownloadQR();
 void setScannedQR(int scanned);
 
+// Enhanced QR scanning functions
+int getQRScanStats(int *attempts, int *success);
+int setQRScanDelay(int delay_ms);
+int resetQRScanStats();
+int validateQRData(const char *data, int length);
+void resetQRScanner();
+
+// QR quality and UI enhancement functions
+typedef enum {
+  QR_QUALITY_POOR,
+  QR_QUALITY_FAIR,
+  QR_QUALITY_GOOD,
+  QR_QUALITY_EXCELLENT
+} QRQuality;
+
+QRQuality getQRQuality(const char *data, int length);
+void drawQRTargetingFrame(int x, int y, int size);
+void drawQRQualityIndicator(int x, int y, QRQuality quality);
+void playQRBeep(QRQuality quality);
+void updateQRAnimation(float *animation_progress);
+
 #endif

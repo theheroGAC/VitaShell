@@ -1054,27 +1054,28 @@ int dialogSteps() {
       if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
         setDialogStep(DIALOG_STEP_NONE);
         setScannedQR(0);
+        stopQR();
+        resetQRScanner(); // Reset scanner for next use
       } else if (scannedQR()) {
         setDialogStep(DIALOG_STEP_QR_DONE);
         sceMsgDialogClose();
         setScannedQR(0);
         stopQR();
       }
-      
+
       break;
     }
-    
+
     case DIALOG_STEP_QR_DONE:
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
         setDialogStep(DIALOG_STEP_QR_WAITING);
-        stopQR();
-        finishQR();
+        // Don't finish QR completely - keep camera and thread alive for reuse
         SceUID thid = sceKernelCreateThread("qr_scan_thread", (SceKernelThreadEntry)qr_scan_thread, 0x10000100, 0x100000, 0, 0, NULL);
         if (thid >= 0)
           sceKernelStartThread(thid, 0, NULL);
       }
-      
+
       break;
     }
     
@@ -1090,8 +1091,9 @@ int dialogSteps() {
         setDialogStep(DIALOG_STEP_QR_DOWNLOADING);
       } else if (msg_result == MESSAGE_DIALOG_RESULT_NO) {
         setDialogStep(DIALOG_STEP_NONE);
+        resetQRScanner(); // Reset scanner when user cancels
       }
-      
+
       break;
     }
     
@@ -1118,24 +1120,36 @@ int dialogSteps() {
     case DIALOG_STEP_QR_OPEN_WEBSITE:
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_YES) {
-        setDialogStep(DIALOG_STEP_NONE);
-        sceAppMgrLaunchAppByUri(0xFFFFF, getLastQR());
+        char *last_qr = getLastQR();
+        if (last_qr) {
+          setDialogStep(DIALOG_STEP_NONE);
+          sceAppMgrLaunchAppByUri(0xFFFFF, last_qr);
+        } else {
+          setDialogStep(DIALOG_STEP_NONE);
+        }
       } else if (msg_result == MESSAGE_DIALOG_RESULT_NO) {
         setDialogStep(DIALOG_STEP_NONE);
+        resetQRScanner(); // Reset scanner when user cancels
       } else if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
-        setDialogStep(DIALOG_STEP_NONE);
-        sceAppMgrLaunchAppByUri(0xFFFFF, getLastQR());
+        char *last_qr = getLastQR();
+        if (last_qr) {
+          setDialogStep(DIALOG_STEP_NONE);
+          sceAppMgrLaunchAppByUri(0xFFFFF, last_qr);
+        } else {
+          setDialogStep(DIALOG_STEP_NONE);
+        }
       }
-      
+
       break;
     }
-    
+
     case DIALOG_STEP_QR_SHOW_CONTENTS:
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
         setDialogStep(DIALOG_STEP_NONE);
+        resetQRScanner(); // Reset scanner after showing contents
       }
-      
+
       break;
     }
     

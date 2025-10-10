@@ -5,4 +5,4 @@ cp pkg/sce_sys/livearea/contents/bg.png release/bg.png
 cp pkg/sce_sys/livearea/contents/startup.png release/startup.png
 cp pkg/sce_sys/livearea/contents/template.xml release/template.xml
 cp pkg/sce_sys/icon0.png release/icon0.png
-echo -n -e \\x00\\x0D\\x02\\x00 > release/version.bin
+echo -n -e \\x00\\x0E\\x02\\x00 > release/version.bin

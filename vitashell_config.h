@@ -40,6 +40,6 @@ typedef struct {
   int focus_color; // New for selection bar color
 } VitaShellConfig;
 
-extern int qr_used; // Flag to track if QR has been used once
+// QR functionality always available - no usage restrictions
 
 #endif

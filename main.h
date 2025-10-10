@@ -54,7 +54,7 @@
 
 // VitaShell version major.minor
 #define VITASHELL_VERSION_MAJOR 0x02
-#define VITASHELL_VERSION_MINOR 0x0D
+#define VITASHELL_VERSION_MINOR 0x0E
 
 #define VITASHELL_VERSION ((VITASHELL_VERSION_MAJOR << 0x18) | (VITASHELL_VERSION_MINOR << 0x10))
 
@@ -141,6 +141,8 @@
 #define UNCOMMON_DIALOG_PROGRESS_BAR_BOX_WIDTH 420.0f
 #define UNCOMMON_DIALOG_PROGRESS_BAR_HEIGHT 8.0f
 #define MSG_DIALOG_MODE_QR_SCAN 10
+
+// QR Scanner colors are defined directly in qr.c for compatibility
 
 // QR Camera
 #define CAM_WIDTH 640

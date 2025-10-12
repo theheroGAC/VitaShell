@@ -292,52 +292,64 @@ void loadTheme() {
   // Load default pngs
   if (!dialog_image) {
     dialog_image = vita2d_create_empty_texture(SCREEN_WIDTH, SCREEN_HEIGHT);
-    void *data = vita2d_texture_get_datap(dialog_image);
-
-    int y;
-    for (y = 0; y < SCREEN_HEIGHT; y++) {
-      int x;
-      for (x = 0; x < SCREEN_WIDTH; x++) {
-        ((uint32_t *)data)[x + SCREEN_WIDTH * y] = DIALOG_BG_COLOR;
+    if (dialog_image) {
+      void *data = vita2d_texture_get_datap(dialog_image);
+      if (data) {
+        int y;
+        for (y = 0; y < SCREEN_HEIGHT; y++) {
+          int x;
+          for (x = 0; x < SCREEN_WIDTH; x++) {
+            ((uint32_t *)data)[x + SCREEN_WIDTH * y] = DIALOG_BG_COLOR;
+          }
+        }
       }
     }
   }
 
   if (!context_image) {
     context_image = vita2d_create_empty_texture(SCREEN_WIDTH, SCREEN_HEIGHT);
-    void *data = vita2d_texture_get_datap(context_image);
-
-    int y;
-    for (y = 0; y < SCREEN_HEIGHT; y++) {
-      int x;
-      for (x = 0; x < SCREEN_WIDTH; x++) {
-        ((uint32_t *)data)[x + SCREEN_WIDTH * y] = CONTEXT_MENU_COLOR;
+    if (context_image) {
+      void *data = vita2d_texture_get_datap(context_image);
+      if (data) {
+        int y;
+        for (y = 0; y < SCREEN_HEIGHT; y++) {
+          int x;
+          for (x = 0; x < SCREEN_WIDTH; x++) {
+            ((uint32_t *)data)[x + SCREEN_WIDTH * y] = CONTEXT_MENU_COLOR;
+          }
+        }
       }
     }
   }
 
   if (!context_more_image) {
     context_more_image = vita2d_create_empty_texture(SCREEN_WIDTH, SCREEN_HEIGHT);
-    void *data = vita2d_texture_get_datap(context_more_image);
-
-    int y;
-    for (y = 0; y < SCREEN_HEIGHT; y++) {
-      int x;
-      for (x = 0; x < SCREEN_WIDTH; x++) {
-        ((uint32_t *)data)[x + SCREEN_WIDTH * y] = CONTEXT_MENU_MORE_COLOR;
+    if (context_more_image) {
+      void *data = vita2d_texture_get_datap(context_more_image);
+      if (data) {
+        int y;
+        for (y = 0; y < SCREEN_HEIGHT; y++) {
+          int x;
+          for (x = 0; x < SCREEN_WIDTH; x++) {
+            ((uint32_t *)data)[x + SCREEN_WIDTH * y] = CONTEXT_MENU_MORE_COLOR;
+          }
+        }
       }
     }
   }
 
   if (!settings_image) {
     settings_image = vita2d_create_empty_texture(SCREEN_WIDTH, SCREEN_HEIGHT);
-    void *data = vita2d_texture_get_datap(settings_image);
-
-    int y;
-    for (y = 0; y < SCREEN_HEIGHT; y++) {
-      int x;
-      for (x = 0; x < SCREEN_WIDTH; x++) {
-        ((uint32_t *)data)[x + SCREEN_WIDTH * y] = SETTINGS_MENU_COLOR;
+    if (settings_image) {
+      void *data = vita2d_texture_get_datap(settings_image);
+      if (data) {
+        int y;
+        for (y = 0; y < SCREEN_HEIGHT; y++) {
+          int x;
+          for (x = 0; x < SCREEN_WIDTH; x++) {
+            ((uint32_t *)data)[x + SCREEN_WIDTH * y] = SETTINGS_MENU_COLOR;
+          }
+        }
       }
     }
   }

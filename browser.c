@@ -470,8 +470,11 @@ int shortCuts() {
   }
 
   // QR
-  if (current_pad[PAD_CIRCLE]/* && enabledQR()*/) {
-    initQR();
+  if (current_pad[PAD_CIRCLE]) {
+    if (!enabledQR()) {
+      initQR();
+    }
+
     if (enabledQR())
     {
         startQR();

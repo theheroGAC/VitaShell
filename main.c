@@ -994,6 +994,16 @@ int dialogSteps() {
       break;
     }
 
+    case DIALOG_STEP_UPDATE_NONE_AVAILABLE:
+    {
+      if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
+        // User pressed OK on "no updates available" message
+        setDialogStep(DIALOG_STEP_NONE);
+      }
+
+      break;
+    }
+
     case DIALOG_STEP_DOWNLOADED:
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
@@ -1011,14 +1021,14 @@ int dialogSteps() {
     
     case DIALOG_STEP_SETTINGS_AGREEMENT:
     {
-      if (msg_result == MESSAGE_DIALOG_RESULT_NO) {
-        settingsAgree();  // O closes VitaShell and restarts
+      if (msg_result == MESSAGE_DIALOG_RESULT_YES) {
+        settingsAgree();  // X confirms and restarts VitaShell
         setDialogStep(DIALOG_STEP_NONE);
-      } else if (msg_result == MESSAGE_DIALOG_RESULT_YES) {
-        settingsDisagree();  // X goes back to VitaShell
+      } else if (msg_result == MESSAGE_DIALOG_RESULT_NO) {
+        settingsDisagree();  // O cancels and goes back to settings
         setDialogStep(DIALOG_STEP_NONE);
       } else if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
-        settingsAgree();
+        settingsAgree();  // Default action restarts VitaShell
         setDialogStep(DIALOG_STEP_NONE);
       }
 

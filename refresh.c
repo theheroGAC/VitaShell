@@ -469,52 +469,52 @@ void psp_callback(void* data, const char* dir, const char* subdir) {
 		  		  
           
           if(get_pbp_content_id(eboot_pbp, contentid)) {
-            // create directories
-            char promote_psp_folder[MAX_PATH_LENGTH];
-            char promote_psp_game_folder[MAX_PATH_LENGTH];
-            char promote_psp_license_folder[MAX_PATH_LENGTH];
-            
-            char promote_license_rif[MAX_PATH_LENGTH];
-            char promote_game_folder[MAX_PATH_LENGTH];
-            
-            snprintf(promote_psp_folder, MAX_PATH_LENGTH, "%s/PSP", PSP_TEMP); 
-            snprintf(promote_psp_game_folder, MAX_PATH_LENGTH, "%s/PSP/GAME", PSP_TEMP); 
-            snprintf(promote_psp_license_folder, MAX_PATH_LENGTH, "%s/PSP/LICENSE", PSP_TEMP); 
-            
-            snprintf(promote_license_rif, MAX_PATH_LENGTH, "%s/PSP/LICENSE/%s.rif", PSP_TEMP, contentid);
-            
-            void *sfo_buffer = NULL;
-            int sfo_size = get_pbp_sfo(eboot_pbp, &sfo_buffer);
-          
+              // create directories
+              char promote_psp_folder[MAX_PATH_LENGTH];
+              char promote_psp_game_folder[MAX_PATH_LENGTH];
+              char promote_psp_license_folder[MAX_PATH_LENGTH];
+
+              char promote_license_rif[MAX_PATH_LENGTH];
+              char promote_game_folder[MAX_PATH_LENGTH];
+
+              snprintf(promote_psp_folder, MAX_PATH_LENGTH, "%s/PSP", PSP_TEMP);
+              snprintf(promote_psp_game_folder, MAX_PATH_LENGTH, "%s/PSP/GAME", PSP_TEMP);
+              snprintf(promote_psp_license_folder, MAX_PATH_LENGTH, "%s/PSP/LICENSE", PSP_TEMP);
+
+              snprintf(promote_license_rif, MAX_PATH_LENGTH, "%s/PSP/LICENSE/%s.rif", PSP_TEMP, contentid);
+
+              void *sfo_buffer = NULL;
+              int sfo_size = get_pbp_sfo(eboot_pbp, &sfo_buffer);
+
             if(sfo_size >= 0) {
-              
+
               char discid[12];
-              
+
               getSfoString(sfo_buffer, "DISC_ID", discid, sizeof(discid));
-              
+
               // maintain compatiblity with psp bubble cloning, and other tricks
               // use folder name as disc id, *only* on npumdimg
               if(pbp_type == PBP_TYPE_NPUMDIMG)
                 strncpy(discid, subdir, sizeof(discid)-1);
-              
+
               // ensure its installing PS1 to the correct folder ..
               // if ps1 installed to incorrect folder, will give
-              // 'cannot open the memory card' error message			  
-              snprintf(promote_game_folder, MAX_PATH_LENGTH, "%s/PSP/GAME/%s", PSP_TEMP, discid); 
+              // 'cannot open the memory card' error message
+              snprintf(promote_game_folder, MAX_PATH_LENGTH, "%s/PSP/GAME/%s", PSP_TEMP, discid);
               sceClibPrintf("promote_game_folder: %s\n", promote_game_folder);
               sceClibPrintf("game_folder: %s\n", path);
-              
+
               // get current rif location
-              snprintf(license_rif, MAX_PATH_LENGTH, "ux0:/pspemu/PSP/LICENSE/%s.rif", contentid);	
-              
-              // create the promote directories
-			          
-              sceIoMkdir("ux0:pspemu", 0006);
-              sceIoMkdir("ux0:pspemu/temp", 0006);
-              sceIoMkdir(PSP_TEMP, 0006);
-              sceIoMkdir(promote_psp_folder, 0006);
-              sceIoMkdir(promote_psp_game_folder, 0006);
-              sceIoMkdir(promote_psp_license_folder, 0006);
+              snprintf(license_rif, MAX_PATH_LENGTH, "ux0:/pspemu/PSP/LICENSE/%s.rif", contentid);
+
+              // create the promote directories with proper permissions for USB visibility
+
+              sceIoMkdir("ux0:pspemu", 0777);
+              sceIoMkdir("ux0:pspemu/temp", 0777);
+              sceIoMkdir(PSP_TEMP, 0777);
+              sceIoMkdir(promote_psp_folder, 0777);
+              sceIoMkdir(promote_psp_game_folder, 0777);
+              sceIoMkdir(promote_psp_license_folder, 0777);
               
               // copy the rif to the promote location
               int res = copyFile(license_rif, promote_license_rif, NULL);
@@ -656,14 +656,14 @@ int refresh_thread(SceSize args, void *argp)  {
   // Update thread
   thid = createStartUpdateThread(refresh_data.count, 0);
 
-  // Make sure we have the temp directories we need
-  sceIoMkdir("ux0:temp", 0006);
-  sceIoMkdir("ux0:pspemu", 0006);
-  sceIoMkdir("ux0:pspemu/temp", 0006);
-  sceIoMkdir(DLC_TEMP, 0006);
-  sceIoMkdir(PATCH_TEMP, 0006);
-  sceIoMkdir(PSM_TEMP, 0006);
-  sceIoMkdir(PSP_TEMP, 0006);
+  // Make sure we have the temp directories we need with proper USB visibility permissions
+  sceIoMkdir("ux0:temp", 0777);
+  sceIoMkdir("ux0:pspemu", 0777);
+  sceIoMkdir("ux0:pspemu/temp", 0777);
+  sceIoMkdir(DLC_TEMP, 0777);
+  sceIoMkdir(PATCH_TEMP, 0777);
+  sceIoMkdir(PSM_TEMP, 0777);
+  sceIoMkdir(PSP_TEMP, 0777);
   refresh_data.refresh_pass = 1;
 
   // Refresh apps

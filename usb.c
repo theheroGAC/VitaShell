@@ -94,9 +94,13 @@ int mountUsbUx0() {
   copyPath("ux0:appmeta/VITASHELL", "uma0:appmeta/VITASHELL", NULL);
   copyPath("ux0:license/app/VITASHELL", "uma0:license/app/VITASHELL", NULL);
 
-  // Create important dirs
+  // Create important dirs with proper permissions for USB visibility
   sceIoMkdir("uma0:data", 0777);
-  sceIoMkdir("uma0:temp", 0006);
+  sceIoMkdir("uma0:temp", 0777);
+
+  // Ensure PSPEMU and PICTURE directories exist with proper permissions for Windows visibility
+  sceIoMkdir("ux0:pspemu", 0777);
+  sceIoMkdir("ux0:picture", 0777);
 
   // Remove lastdir.txt file
   sceIoRemove("uma0:VitaShell/internal/lastdir.txt");

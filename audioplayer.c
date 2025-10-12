@@ -203,6 +203,8 @@ int audioPlayer(const char *file, int type, FileList *list, FileListEntry *entry
   static int speed_list[] = { -7, -3, -1, 0, 1, 3, 7 };
   #define N_SPEED (sizeof(speed_list) / sizeof(int))
 
+  int repeat_mode = vitashell_config.audio_repeat; // 0=None, 1=One, 2=All
+
   sceAppMgrAcquireBgmPort();
 
   powerLock();
@@ -293,6 +295,19 @@ int audioPlayer(const char *file, int type, FileList *list, FileListEntry *entry
 
         lyrics = loadLyricsFile(file,&totalms,&lyricsIndex);
 
+      } else if (endOfStreamFunct() && repeat_mode == 1) {
+        // Repeat one: restart same song
+        lrcParseClose(lyrics);
+        endFunct();
+        initFunct(0);
+        loadFunct((char *)file);
+        playFunct();
+
+        getAudioInfo(file);
+
+        lyrics = loadLyricsFile(file,&totalms,&lyricsIndex);
+
+        continue;
       } else {
         int available = 0;
 
@@ -352,10 +367,42 @@ int audioPlayer(const char *file, int type, FileList *list, FileListEntry *entry
         }
 
         if (!available) {
-          *base_pos = old_base_pos;
-          *rel_pos = old_rel_pos;
-          entry = old_entry;
-          break;
+          if (repeat_mode == 2 && !previous) { // Repeat All: restart from first song
+            *base_pos = 0;
+            *rel_pos = 0;
+            entry = list->head ? list->head : old_entry; // Fallback if no head
+
+            if (entry && !entry->is_folder) {
+              char path[MAX_PATH_LENGTH];
+              snprintf(path, MAX_PATH_LENGTH, "%s%s", list->path, entry->name);
+              int new_type = getFileType(path);
+              if (new_type == FILE_TYPE_MP3 || new_type == FILE_TYPE_OGG) {
+                file = path;
+
+                lrcParseClose(lyrics);
+                endFunct();
+
+                setAudioFunctions(new_type);
+
+                initFunct(0);
+                loadFunct((char *)file);
+                playFunct();
+
+                getAudioInfo(file);
+
+                lyrics = loadLyricsFile(file,&totalms,&lyricsIndex);
+
+                available = 1;
+              }
+            }
+          }
+
+          if (!available) {
+            *base_pos = old_base_pos;
+            *rel_pos = old_rel_pos;
+            entry = old_entry;
+            break;
+          }
         }
       }
     }

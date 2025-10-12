@@ -40,9 +40,10 @@ extern unsigned char _binary_resources_updater_param_bin_size;
 // Thread to auto-close the "no updates" message
 static int autoCloseNoUpdateThread(SceSize args, void *argp) {
   sceKernelDelayThread(2500 * 1000L); // Wait 2.5 seconds
-  if (getDialogStep() == DIALOG_STEP_NONE) { // Still no dialog active
-    // Assume our message was shown and auto-close it
+  if (getDialogStep() == DIALOG_STEP_UPDATE_NONE_AVAILABLE) { // Still showing our message
+    // Close the no updates message and reset dialog step
     closeWaitDialog();
+    setDialogStep(DIALOG_STEP_NONE);
   }
   return sceKernelExitDeleteThread(0);
 }
@@ -105,9 +106,10 @@ EXIT:
   // If no update dialog was shown and we're coming from manual check,
   // show "no updates available" message
   if (getDialogStep() == DIALOG_STEP_NONE) {
-    initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_NONE, language_container[NO_UPDATES_AVAILABLE]);
+    initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_OK, language_container[NO_UPDATES_AVAILABLE]);
+    setDialogStep(DIALOG_STEP_UPDATE_NONE_AVAILABLE);
 
-    // Auto-close after 2.5 seconds
+    // Auto-close after 2.5 seconds in background
     SceUID closeThid = sceKernelCreateThread("auto_close_no_update",
                                             (SceKernelThreadEntry)autoCloseNoUpdateThread,
                                             0x10000100, 0x10000, 0, 0, NULL);

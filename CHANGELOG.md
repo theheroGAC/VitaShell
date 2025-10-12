@@ -23,65 +23,10 @@
 - **Manual Updates**: Users can still check for updates manually via "Check Updates" option
 - **Configuration Persistence**: All new settings properly saved and restored
 - **Memory Optimization**: Efficient settings handling and menu navigation
+- **Language Restart Fix**: Fixed inverted button logic for language change restart confirmation
+- **Smart Scrolling**: Added automatic scrolling that follows navigation for better UX
 
 ---
-
-# VitaShell 2.14 (mod by theheroGAC)
-
-## What's New in 2.14
-
-### Major Fixes and Improvements
-- **Performance Optimizations**: Major QR scanner speed improvements with intelligent frame processing
-
-### Performance Enhancements
-- **Intelligent Frame Skipping**: Adaptive frame processing based on detection success rate
-- **Batch Pixel Processing**: Optimized grayscale conversion processing 4 pixels simultaneously
-- **Dynamic Delay Adjustment**: Automatic performance tuning (33ms-150ms range)
-- **Early Exit Optimization**: Faster QR detection with priority-based code checking
-- **Thread Priority Boost**: Maximum priority threads for optimal QR processing performance
-
-### Technical Updates
-- **Version Bump**: Updated to 2.14 across all build systems
-- **Memory Optimization**: Reduced memory footprint in QR processing
-- **Adaptive Algorithm**: Self-tuning performance based on success rates
-- **Cache-Friendly Processing**: Optimized memory access patterns for better CPU utilization
-
-### Localization & Themes
-- **French Translation**: Complete French localization by chronoss09
-- **Japanese Translation Update**: Enhanced Japanese translation by yyoossk
-- **Electron Theme**: Updated Electron theme with improved styling and compatibility
-
-### Code Quality
-- **Clean Codebase**: Removed deprecated audio feedback systems
-- **Optimized Algorithms**: Faster mathematical operations for image processing
-- **Better Threading**: Improved thread priorities and resource management
-- **Performance Monitoring**: Built-in performance tracking and adaptation
-
----
-
-# VitaShell 2.13 (mod by theheroGAC)
-
-## What's New in 2.13
-
-### Major New Features
-- **One-Time QR Scanner**: Access QR scanner once via SELECT button, then auto-switches to USB mode
-- **Selection Bar Color**: Choose from 6 colors for file selection bars (Green, Grey, Blue, Red, Pink, Yellow)
-
-### Technical Updates
-- **Version Bump**: Updated to 2.13
-- **Smart Menu Behavior**: QR option disappears after use for clean UI
-- **Persistent Settings**: Color choices saved across sessions
-- **Optimized UI**: Improved navigation and fallback behaviors
-- **Updated Japanese Translation**: Thanks to yyoossk for improved Japanese localization
-
-###  Known Limitations
-- QR scanner limited by design to prevent abuse
-- One-time use policy ensures secure functionality
-
----
-
-This release adds convenient QR integration and UI customization while keeping VitaShell stable and user-friendly.
-
 
 ### Credits & Acknowledgments
 

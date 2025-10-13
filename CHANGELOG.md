@@ -25,6 +25,7 @@
 - **Memory Optimization**: Efficient settings handling and menu navigation
 - **Language Restart Fix**: Fixed inverted button logic for language change restart confirmation
 - **Smart Scrolling**: Added automatic scrolling that follows navigation for better UX
+- **Initial fix for QR code scanner by Isage (RealYoti#8) and then further improvements implemented in the code
 
 ---
 

@@ -40,6 +40,8 @@ typedef struct {
   int focus_color; // New for selection bar color
   int disable_low_battery_warning; // New for low battery warning toggle
   int audio_repeat; // New for audio repeat mode
+  int font_size; // New for font size setting
+  int enable_touch; // New for touch input toggle
 } VitaShellConfig;
 
 // QR functionality always available - no usage restrictions

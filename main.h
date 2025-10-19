@@ -54,7 +54,7 @@
 
 // VitaShell version major.minor
 #define VITASHELL_VERSION_MAJOR 0x02
-#define VITASHELL_VERSION_MINOR 0x0F
+#define VITASHELL_VERSION_MINOR 0x10
 
 #define VITASHELL_VERSION ((VITASHELL_VERSION_MAJOR << 0x18) | (VITASHELL_VERSION_MINOR << 0x10))
 
@@ -79,18 +79,19 @@
 #define COLOR_ALPHA(color, alpha) (color & 0x00FFFFFF) | ((alpha & 0xFF) << 24)
 
 // Font
-#define FONT_SIZE 1.0f
+extern float current_font_size;
+#define FONT_SIZE 1.0f  // Keep for compatibility, but don't use directly
 #define FONT_X_SPACE 15.0f
 #define FONT_Y_SPACE 23.0f
 
 #define pgf_draw_text(x, y, color, text) \
-  vita2d_pgf_draw_text(font, x, (y)+20, color, FONT_SIZE, text)
+  vita2d_pgf_draw_text(font, x, (y)+20, color, current_font_size, text)
 
 #define pgf_draw_textf(x, y, color, ...) \
-  vita2d_pgf_draw_textf(font, x, (y)+20, color, FONT_SIZE, __VA_ARGS__)
+  vita2d_pgf_draw_textf(font, x, (y)+20, color, current_font_size, __VA_ARGS__)
 
 #define pgf_text_width(text) \
-  vita2d_pgf_text_width(font, FONT_SIZE, text)
+  vita2d_pgf_text_width(font, current_font_size, text)
   
 // Screen
 #define SCREEN_WIDTH 960
@@ -155,6 +156,15 @@
 #define MAX_URL_LENGTH 128
 
 #define BIG_BUFFER_SIZE 16 * 1024 * 1024
+
+// Touch input
+#define FRONT_TOUCH_PORT 0  // Front touch panel only
+#define MAX_TOUCH_POINTS 1  // We only need one touch point for UI navigation
+
+// Touch areas for file browser
+#define FILE_LIST_START_Y START_Y
+#define FILE_LIST_END_Y (START_Y + MAX_ENTRIES * FONT_Y_SPACE)
+#define FILE_LIST_AREA_HEIGHT (MAX_ENTRIES * FONT_Y_SPACE)
 
 enum RefreshModes {
   REFRESH_MODE_NONE,
@@ -272,6 +282,20 @@ extern VitaShellConfig vitashell_config;
 extern int SCE_CTRL_ENTER, SCE_CTRL_CANCEL;
 
 extern int use_custom_config;
+
+// Touch input variables (declared in utils.c)
+extern float touch_x, touch_y;
+extern int touch_pressed, touch_was_pressed;
+
+// Touch scrolling and double tap variables
+extern SceUInt64 last_touch_time;
+extern float last_touch_x, last_touch_y;
+extern int touch_drag_mode;
+extern float touch_drag_start_y;
+extern SceUInt64 touch_drag_start_time;
+extern float touch_scroll_velocity;
+extern SceUInt64 last_tap_time;
+extern float last_tap_x, last_tap_y;
 
 int getDialogStep();
 void setDialogStep(int step);

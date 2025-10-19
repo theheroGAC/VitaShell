@@ -372,6 +372,9 @@ void initVitaShell() {
   // Set sampling mode
   sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
 
+  // Load touch module
+  sceSysmoduleLoadModule(0x0007); // Touch module
+
   // Load modules
   sceSysmoduleLoadModule(SCE_SYSMODULE_VIDEO_EXPORT);
   sceSysmoduleLoadModule(SCE_SYSMODULE_PGF);
@@ -460,4 +463,5 @@ void finishVitaShell() {
   sceSysmoduleUnloadModule(SCE_SYSMODULE_MUSIC_EXPORT);
   sceSysmoduleUnloadModule(SCE_SYSMODULE_PGF);
   sceSysmoduleUnloadModule(SCE_SYSMODULE_VIDEO_EXPORT);
+  sceSysmoduleUnloadModule(0x0007); // Touch module
 }

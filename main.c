@@ -96,6 +96,7 @@ char vita_ip[16];
 unsigned short int vita_port;
 
 VitaShellConfig vitashell_config;
+float current_font_size = 1.0f;
 
 int SCE_CTRL_ENTER = SCE_CTRL_CROSS, SCE_CTRL_CANCEL = SCE_CTRL_CIRCLE;
 

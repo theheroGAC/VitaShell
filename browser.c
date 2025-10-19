@@ -78,6 +78,11 @@ static float scroll_x = FILE_X;
 
 SceInt64 time_last_recent_files, time_last_bookmarks;
 
+// Touch support variables
+static SceUInt64 touch_hold_start_time = 0;
+static int touch_held_for_context_menu = 0;
+static int touch_navigation_enabled = 1;
+
 static void fileBrowserHandleSymlink(FileListEntry* file_entry);
 static void fileBrowserHandleFolder(FileListEntry* file_entry);
 static void fileBrowserHandleFile(FileListEntry* file_entry);
@@ -486,8 +491,308 @@ int shortCuts() {
   return 0;
 }
 
+// Touch support functions
+static int getFileListIndexFromTouch(float touch_y) {
+  if (touch_y < FILE_LIST_START_Y || touch_y >= FILE_LIST_END_Y)
+    return -1;
+
+  float relative_y = touch_y - FILE_LIST_START_Y;
+  int list_index = (int)(relative_y / FONT_Y_SPACE);
+
+  if (list_index >= 0 && list_index < MAX_ENTRIES) {
+    int actual_index = base_pos + list_index;
+    if (actual_index < file_list.length) {
+      return actual_index;
+    }
+  }
+
+  return -1;
+}
+
+static int isDoubleTap(float x, float y) {
+  SceUInt64 current_time = sceKernelGetSystemTimeWide();
+
+  // Check if tap is in the same area (within 50 pixels)
+  if (fabs(x - last_tap_x) < 50.0f && fabs(y - last_tap_y) < 50.0f) {
+    // Check if within double tap time window (300ms)
+    if ((current_time - last_tap_time) < 300 * 1000) {
+      return 1;
+    }
+  }
+
+  // Update last tap info
+  last_tap_time = current_time;
+  last_tap_x = x;
+  last_tap_y = y;
+
+  return 0;
+}
+
+static int isDoubleTapOnRightSide(float x, float y) {
+  SceUInt64 current_time = sceKernelGetSystemTimeWide();
+
+  // Check if tap is on the right side AND in the same area (within 50 pixels)
+  if (x > SCREEN_HALF_WIDTH && fabs(x - last_tap_x) < 50.0f && fabs(y - last_tap_y) < 50.0f) {
+    // Check if within double tap time window (300ms)
+    if ((current_time - last_tap_time) < 300 * 1000) {
+      return 1;
+    }
+  }
+
+  // Update last tap info
+  last_tap_time = current_time;
+  last_tap_x = x;
+  last_tap_y = y;
+
+  return 0;
+}
+
+static void handleTouchScrolling() {
+  if (!vitashell_config.enable_touch || !touch_pressed)
+    return;
+
+  SceUInt64 current_time = sceKernelGetSystemTimeWide();
+
+  // Start drag mode
+  if (!touch_drag_mode && touch_pressed && !touch_was_pressed) {
+    if (touch_y >= FILE_LIST_START_Y && touch_y < FILE_LIST_END_Y) {
+      touch_drag_mode = 1;
+      touch_drag_start_y = touch_y;
+      touch_drag_start_time = current_time;
+      touch_scroll_velocity = 0.0f;
+    }
+  }
+
+  // Handle dragging
+  if (touch_drag_mode && touch_pressed) {
+    float delta_y = touch_y - touch_drag_start_y;
+
+    // If moved more than threshold, start scrolling
+    if (fabs(delta_y) > 5.0f) { // Reduced threshold for smoother scrolling
+      // Calculate scroll amount with smoother scaling
+      float scroll_factor = 2.0f; // Adjust this factor for sensitivity
+      float scroll_amount = delta_y * scroll_factor / FONT_Y_SPACE;
+
+      // Apply scrolling with improved algorithm
+      int scroll_direction = (delta_y > 0) ? -1 : 1;
+      int scroll_steps = (int)fabs(scroll_amount);
+
+      // Smooth scrolling - apply all steps at once for better performance
+      if (scroll_steps > 0) {
+        int new_rel_pos = rel_pos;
+        int new_base_pos = base_pos;
+
+        if (scroll_direction > 0) { // Scrolling up
+          new_rel_pos = rel_pos - scroll_steps;
+          while (new_rel_pos < 0) {
+            new_rel_pos += MAX_ENTRIES;
+            new_base_pos--;
+          }
+          if (new_base_pos < 0) new_base_pos = 0;
+          if (new_rel_pos < 0) new_rel_pos = 0;
+        } else { // Scrolling down
+          new_rel_pos = rel_pos + scroll_steps;
+          int max_scroll_pos = file_list.length - 1;
+
+          // Handle page boundaries
+          while (new_rel_pos >= MAX_ENTRIES && (new_base_pos + MAX_ENTRIES) <= max_scroll_pos) {
+            new_rel_pos -= MAX_ENTRIES;
+            new_base_pos++;
+          }
+
+          // Ensure we don't go beyond the end of the list
+          int max_possible_base = max_scroll_pos - (MAX_ENTRIES - 1);
+          if (max_possible_base < 0) max_possible_base = 0;
+
+          if (new_base_pos > max_possible_base) {
+            new_base_pos = max_possible_base;
+            new_rel_pos = max_scroll_pos - new_base_pos;
+          }
+
+          // Final safety check
+          if ((new_base_pos + new_rel_pos) > max_scroll_pos) {
+            new_rel_pos = max_scroll_pos - new_base_pos;
+          }
+        }
+
+        // Apply new positions if valid
+        if (new_base_pos >= 0 && new_rel_pos >= 0 &&
+            (new_base_pos + new_rel_pos) < file_list.length) {
+          rel_pos = new_rel_pos;
+          base_pos = new_base_pos;
+        }
+
+        touch_drag_start_y = touch_y;
+        scroll_count = 0;
+      }
+
+      // Calculate velocity for momentum scrolling
+      SceUInt64 time_delta = current_time - touch_drag_start_time;
+      if (time_delta > 0) {
+        touch_scroll_velocity = delta_y / (float)time_delta;
+      }
+    }
+  }
+
+  // End drag mode
+  if (touch_drag_mode && !touch_pressed && touch_was_pressed) {
+    touch_drag_mode = 0;
+
+    // Apply improved momentum scrolling with boundary checks
+    if (fabs(touch_scroll_velocity) > 0.0005f) {
+      // Calculate momentum with better physics
+      float momentum_factor = 50000.0f; // Adjust for desired momentum strength
+      float momentum = touch_scroll_velocity * momentum_factor;
+
+      if (fabs(momentum) > 0.5f) {
+        int scroll_steps = (int)fabs(momentum);
+        int max_momentum_steps = 15; // Allow more momentum steps for smoother feel
+        int max_scroll_pos = file_list.length - 1;
+
+        for (int i = 0; i < scroll_steps && i < max_momentum_steps; i++) {
+          // Apply damping to create natural deceleration
+          float damping = 1.0f - (float)i / (float)max_momentum_steps;
+
+          if (touch_scroll_velocity > 0) { // Continue scrolling up
+            if (rel_pos > 0) {
+              rel_pos--;
+            } else if (base_pos > 0) {
+              base_pos--;
+            }
+            // If at top, stop momentum
+            if (base_pos == 0 && rel_pos == 0) break;
+          } else { // Continue scrolling down
+            int current_pos = base_pos + rel_pos;
+
+            if (current_pos < max_scroll_pos) {
+              if ((rel_pos + 1) < MAX_ENTRIES && (base_pos + rel_pos + 1) < file_list.length) {
+                rel_pos++;
+              } else if ((base_pos + rel_pos + 1) < file_list.length) {
+                base_pos++;
+                rel_pos = 0;
+              } else {
+                // At the end, stop momentum
+                break;
+              }
+            } else {
+              // Already at end, stop momentum
+              break;
+            }
+          }
+
+          // Update scroll count for visual feedback
+          scroll_count = 0;
+        }
+      }
+    }
+
+    touch_scroll_velocity = 0.0f;
+  }
+}
+
 static int fileBrowserMenuCtrl() {
   int refresh = 0;
+
+  // Handle touch scrolling
+  handleTouchScrolling();
+
+  // Touch navigation and interaction
+  if (vitashell_config.enable_touch && touch_pressed && !touch_was_pressed) {
+    // Check if context menu is open - if so, handle touch on it
+    if (getContextMenuMode() != CONTEXT_MENU_CLOSED) {
+      // Touch on context menu area - close it
+      // Context menu appears on the right side, check if touch is on the menu
+      if (touch_x >= SCREEN_WIDTH - 350.0f && touch_x <= SCREEN_WIDTH &&
+          touch_y >= START_Y && touch_y <= SCREEN_HEIGHT - 50.0f) {
+        setContextMenuMode(CONTEXT_MENU_CLOSING);
+        return 0;
+      }
+    }
+
+    // Check if touch is in file list area
+    if (touch_y >= FILE_LIST_START_Y && touch_y < FILE_LIST_END_Y) {
+      int touched_index = getFileListIndexFromTouch(touch_y);
+      if (touched_index >= 0 && touched_index < file_list.length) {
+        // Check if touch is on the right side (for context menu)
+        if (touch_x > SCREEN_HALF_WIDTH) {
+          // Right side touch - select item and prepare for double tap context menu
+          if (touched_index >= base_pos && touched_index < (base_pos + MAX_ENTRIES)) {
+            rel_pos = touched_index - base_pos;
+          } else if (touched_index < base_pos) {
+            base_pos = touched_index;
+            rel_pos = 0;
+          } else if (touched_index >= (base_pos + MAX_ENTRIES)) {
+            rel_pos = MAX_ENTRIES - 1;
+            base_pos = touched_index - rel_pos;
+          }
+          scroll_count = 0;
+
+          // Check for double tap on right side to open context menu
+          if (isDoubleTapOnRightSide(touch_x, touch_y)) {
+            if (getContextMenuMode() == CONTEXT_MENU_CLOSED) {
+              if (dir_level > 0) {
+                setContextMenu(&context_menu_main);
+                setContextMenuMainVisibilities();
+                setContextMenuMode(CONTEXT_MENU_OPENING);
+              } else {
+                setContextMenu(&context_menu_home);
+                setContextMenuHomeVisibilities();
+                setContextMenuMode(CONTEXT_MENU_OPENING);
+              }
+            }
+          }
+        } else {
+          // Left side touch - normal navigation
+          // Check for double tap
+          if (isDoubleTap(touch_x, touch_y)) {
+            // Double tap - directly open item
+            if (touched_index >= base_pos && touched_index < (base_pos + MAX_ENTRIES)) {
+              rel_pos = touched_index - base_pos;
+            } else if (touched_index < base_pos) {
+              base_pos = touched_index;
+              rel_pos = 0;
+            } else if (touched_index >= (base_pos + MAX_ENTRIES)) {
+              rel_pos = MAX_ENTRIES - 1;
+              base_pos = touched_index - rel_pos;
+            }
+
+            scroll_count = 0;
+            fileListEmpty(&mark_list);
+
+            // Handle file, symlink or folder immediately
+            FileListEntry *file_entry = fileListGetNthEntry(&file_list, base_pos + rel_pos);
+            if (file_entry) {
+              if (file_entry->is_symlink) {
+                fileBrowserHandleSymlink(file_entry);
+              } else if (file_entry->is_folder) {
+                fileBrowserHandleFolder(file_entry);
+              } else {
+                fileBrowserHandleFile(file_entry);
+                create_recent_symlink(file_entry);
+              }
+            }
+          } else {
+            // Single tap - select item
+            if (touched_index >= base_pos && touched_index < (base_pos + MAX_ENTRIES)) {
+              rel_pos = touched_index - base_pos;
+            } else if (touched_index < base_pos) {
+              base_pos = touched_index;
+              rel_pos = 0;
+            } else if (touched_index >= (base_pos + MAX_ENTRIES)) {
+              rel_pos = MAX_ENTRIES - 1;
+              base_pos = touched_index - rel_pos;
+            }
+            scroll_count = 0;
+          }
+        }
+      }
+    } else {
+      // Touch outside file list area - close context menu if open
+      if (getContextMenuMode() != CONTEXT_MENU_CLOSED) {
+        setContextMenuMode(CONTEXT_MENU_CLOSING);
+      }
+    }
+  }
 
   // Short cuts combo
   if (current_pad[PAD_LEFT])

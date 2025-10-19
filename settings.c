@@ -59,7 +59,8 @@ static int n_settings_entries = 0;
 
 static char *usbdevice_options[4];
 static char *select_button_options[3];
-static char *focus_color_options_texts[6];
+static char *focus_color_options_texts[8];
+static char *font_size_options[3];
 
 static char **theme_options = NULL;
 static int theme_count = 0;
@@ -67,7 +68,7 @@ static char *theme_name = NULL;
 
 static int language_changed = 0; // Flag to track language changes
 static char *language_options[19]; // Complete language options array
-static char *repeat_options[3]; // audio repeat options
+static char *repeat_options[4]; // audio repeat options
 
 static ConfigEntry settings_entries[] = {
   { "LANGUAGE",            CONFIG_TYPE_DECIMAL, (int *)&language },
@@ -78,6 +79,8 @@ static ConfigEntry settings_entries[] = {
   { "DISABLE_LOW_BATTERY_WARNING", CONFIG_TYPE_BOOLEAN, (int *)&vitashell_config.disable_low_battery_warning },
   { "AUDIO_REPEAT",       CONFIG_TYPE_DECIMAL, (int *)&vitashell_config.audio_repeat },
   { "FOCUS_COLOR",        CONFIG_TYPE_DECIMAL, (int *)&vitashell_config.focus_color },
+  { "FONT_SIZE",          CONFIG_TYPE_DECIMAL, (int *)&vitashell_config.font_size },
+  { "ENABLE_TOUCH",       CONFIG_TYPE_BOOLEAN, (int *)&vitashell_config.enable_touch },
 };
 
 static ConfigEntry theme_entries[] = {
@@ -89,17 +92,20 @@ SettingsMenuOption main_settings[] = {
   //   language_options, sizeof(language_options) / sizeof(char *), &language },
   { VITASHELL_SETTINGS_THEME,           SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0, NULL, 0, NULL },
 
+  { VITASHELL_SETTINGS_FONT_SIZE,       SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0,
+    font_size_options, 3, &vitashell_config.font_size },
   { VITASHELL_SETTINGS_USBDEVICE,       SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0,
     usbdevice_options, sizeof(usbdevice_options) / sizeof(char **), &vitashell_config.usbdevice },
   { VITASHELL_SETTINGS_SELECT_BUTTON,   SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0,
     select_button_options, sizeof(select_button_options) / sizeof(char **), &vitashell_config.select_button },
   { VITASHELL_SETTINGS_FOCUS_COLOR,     SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0,
-    focus_color_options_texts, 6, &vitashell_config.focus_color }, // 6 colors
+    focus_color_options_texts, 8, &vitashell_config.focus_color }, // 8 colors
+  { VITASHELL_SETTINGS_ENABLE_TOUCH,    SETTINGS_OPTION_TYPE_BOOLEAN, NULL, NULL, 0, NULL, 0, &vitashell_config.enable_touch },
   { VITASHELL_SETTINGS_NO_AUTO_UPDATE,  SETTINGS_OPTION_TYPE_BOOLEAN, NULL, NULL, 0, NULL, 0, &vitashell_config.disable_autoupdate },
   { VITASHELL_SETTINGS_WARNING_MESSAGE, SETTINGS_OPTION_TYPE_BOOLEAN, NULL, NULL, 0, NULL, 0, &vitashell_config.disable_warning },
   { VITASHELL_SETTINGS_LOW_BATTERY_WARNING, SETTINGS_OPTION_TYPE_BOOLEAN, NULL, NULL, 0, NULL, 0, &vitashell_config.disable_low_battery_warning },
   { VITASHELL_SETTINGS_AUDIO_REPEAT,    SETTINGS_OPTION_TYPE_OPTIONS, NULL, NULL, 0,
-    repeat_options, 3, &vitashell_config.audio_repeat },
+    repeat_options, 4, &vitashell_config.audio_repeat },
   { VITASHELL_SETTINGS_BATTERY_INFO, SETTINGS_OPTION_TYPE_CALLBACK, (void *)showBatteryInfo, NULL, 0, NULL, 0, NULL },
 
   { VITASHELL_SETTINGS_CHECK_UPDATES,  SETTINGS_OPTION_TYPE_CALLBACK, (void *)checkUpdates, NULL, 0, NULL, 0, NULL },
@@ -136,8 +142,18 @@ void loadSettingsConfig() {
 
   // Disable automatic updates by default (disable_autoupdate = 1)
   vitashell_config.disable_autoupdate = 1;
+  // Set default font size to Normal (1)
+  vitashell_config.font_size = 1;
+  // Enable touch by default (enable_touch = 1)
+  vitashell_config.enable_touch = 1;
 
   readConfig("ux0:VitaShell/settings.txt", settings_entries, sizeof(settings_entries) / sizeof(ConfigEntry));
+
+  // Set current font size based on config
+  if (vitashell_config.font_size == 0) current_font_size = 0.75f;      // Small
+  else if (vitashell_config.font_size == 1) current_font_size = 1.0f; // Normal
+  else if (vitashell_config.font_size == 2) current_font_size = 1.25f; // Large
+  else current_font_size = 1.0f; // Default to normal
 }
 
 void saveSettingsConfig() {
@@ -286,6 +302,17 @@ void initSettingsMenu() {
     language_container[VITASHELL_SETTINGS_FOCUS_COLOR_PINK] : "Pink";
   focus_color_options_texts[5] = language_container[VITASHELL_SETTINGS_FOCUS_COLOR_YELLOW] ?
     language_container[VITASHELL_SETTINGS_FOCUS_COLOR_YELLOW] : "Yellow";
+  focus_color_options_texts[6] = language_container[VITASHELL_SETTINGS_FOCUS_COLOR_WHITE] ?
+    language_container[VITASHELL_SETTINGS_FOCUS_COLOR_WHITE] : "White";
+  focus_color_options_texts[7] = language_container[VITASHELL_SETTINGS_FOCUS_COLOR_RAINBOW] ?
+    language_container[VITASHELL_SETTINGS_FOCUS_COLOR_RAINBOW] : "Rainbow";
+
+  font_size_options[0] = language_container[VITASHELL_SETTINGS_FONT_SIZE_SMALL] ?
+    language_container[VITASHELL_SETTINGS_FONT_SIZE_SMALL] : "Small";
+  font_size_options[1] = language_container[VITASHELL_SETTINGS_FONT_SIZE_NORMAL] ?
+    language_container[VITASHELL_SETTINGS_FONT_SIZE_NORMAL] : "Normal";
+  font_size_options[2] = language_container[VITASHELL_SETTINGS_FONT_SIZE_LARGE] ?
+    language_container[VITASHELL_SETTINGS_FONT_SIZE_LARGE] : "Large";
 
   // Language options - must match lang[] array in language.c order!
   language_options[0] = "Japanese";       // matches lang[0]
@@ -306,6 +333,8 @@ void initSettingsMenu() {
   repeat_options[0] = "None";
   repeat_options[1] = "Repeat One";
   repeat_options[2] = "Repeat All";
+  repeat_options[3] = language_container[VITASHELL_SETTINGS_AUDIO_REPEAT_SHUFFLE] ?
+    language_container[VITASHELL_SETTINGS_AUDIO_REPEAT_SHUFFLE] : "Shuffle";
 
   theme_options = malloc(MAX_THEMES * sizeof(char *));
 
@@ -697,6 +726,15 @@ void settingsMenuCtrl() {
           // Track if language changed
           if (option->name == VITASHELL_SETTINGS_LANGUAGE && old_value != *(option->value)) {
             language_changed = 1;
+          }
+
+          // Update font size immediately for UI feedback
+          if (option->name == VITASHELL_SETTINGS_FONT_SIZE) {
+            extern float current_font_size;
+            if (vitashell_config.font_size == 0) current_font_size = 0.75f;
+            else if (vitashell_config.font_size == 1) current_font_size = 1.0f;
+            else if (vitashell_config.font_size == 2) current_font_size = 1.25f;
+            else current_font_size = 1.0f;
           }
         }
 

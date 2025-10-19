@@ -30,6 +30,23 @@ SceCtrlData pad;
 Pad old_pad, current_pad, pressed_pad, released_pad, hold_pad, hold2_pad;
 Pad hold_count, hold2_count;
 
+// Touch input variables
+SceTouchData touch_data;
+SceTouchPanelInfo panel_info;
+int touch_initialized = 0;
+float touch_x = 0.0f, touch_y = 0.0f;
+int touch_pressed = 0, touch_was_pressed = 0;
+
+// Touch scrolling and double tap variables
+SceUInt64 last_touch_time = 0;
+float last_touch_x = 0.0f, last_touch_y = 0.0f;
+int touch_drag_mode = 0;
+float touch_drag_start_y = 0.0f;
+SceUInt64 touch_drag_start_time = 0;
+float touch_scroll_velocity = 0.0f;
+SceUInt64 last_tap_time = 0;
+float last_tap_x = 0.0f, last_tap_y = 0.0f;
+
 static int netdbg_sock = -1;
 static void *net_memory = NULL;
 static int net_init = -1;
@@ -201,6 +218,48 @@ void powerUnlock() {
 void readPad() {
   memset(&pad, 0, sizeof(SceCtrlData));
   sceCtrlPeekBufferPositive(0, &pad, 1);
+
+  // Initialize touch if not already done and touch is enabled
+  if (!touch_initialized && vitashell_config.enable_touch) {
+    sceTouchSetSamplingState(FRONT_TOUCH_PORT, SCE_TOUCH_SAMPLING_STATE_START);
+    sceTouchGetPanelInfo(FRONT_TOUCH_PORT, &panel_info);
+    touch_initialized = 1;
+  }
+
+  // Read touch data from front panel only if touch is enabled
+  if (vitashell_config.enable_touch) {
+    memset(&touch_data, 0, sizeof(SceTouchData));
+    sceTouchPeek(FRONT_TOUCH_PORT, &touch_data, 1);
+
+    // Store previous touch state
+    touch_was_pressed = touch_pressed;
+
+    // Reset touch state
+    touch_pressed = 0;
+    touch_x = 0.0f;
+    touch_y = 0.0f;
+
+    // Process touch data if available
+    if (touch_data.reportNum > 0) {
+      SceTouchReport *report = &touch_data.report[0];
+
+      // Convert touch coordinates to screen coordinates
+      touch_x = (float)report->x * SCREEN_WIDTH / panel_info.maxDispX;
+      touch_y = (float)report->y * SCREEN_HEIGHT / panel_info.maxDispY;
+
+      // Check if touch is within screen bounds
+      if (touch_x >= 0.0f && touch_x < SCREEN_WIDTH &&
+          touch_y >= 0.0f && touch_y < SCREEN_HEIGHT) {
+        touch_pressed = 1;
+      }
+    }
+  } else {
+    // Reset touch state if touch is disabled
+    touch_pressed = 0;
+    touch_was_pressed = 0;
+    touch_x = 0.0f;
+    touch_y = 0.0f;
+  }
 
   memcpy(&old_pad, current_pad, sizeof(Pad));
   memset(&current_pad, 0, sizeof(Pad));

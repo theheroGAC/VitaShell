@@ -308,6 +308,111 @@ int audioPlayer(const char *file, int type, FileList *list, FileListEntry *entry
         lyrics = loadLyricsFile(file,&totalms,&lyricsIndex);
 
         continue;
+      } else if (endOfStreamFunct() && repeat_mode == 3) {
+        // Shuffle: pick random song from playlist
+        int audio_files = 0;
+        FileListEntry *temp_entry;
+
+        // Count audio files in playlist
+        for (temp_entry = list->head; temp_entry; temp_entry = temp_entry->next) {
+          if (!temp_entry->is_folder) {
+            char path[MAX_PATH_LENGTH];
+            snprintf(path, MAX_PATH_LENGTH, "%s%s", list->path, temp_entry->name);
+            int type = getFileType(path);
+            if (type == FILE_TYPE_MP3 || type == FILE_TYPE_OGG) {
+              audio_files++;
+            }
+          }
+        }
+
+        if (audio_files > 1) {
+          // Pick random audio file (different from current)
+          int target_index = rand() % audio_files;
+          int current_index = 0;
+          temp_entry = list->head;
+
+          // Find current song index
+          FileListEntry *curr_temp = list->head;
+          int curr_audio_index = -1;
+          int audio_idx = 0;
+
+          for (curr_temp = list->head; curr_temp; curr_temp = curr_temp->next) {
+            if (!curr_temp->is_folder) {
+              char path[MAX_PATH_LENGTH];
+              snprintf(path, MAX_PATH_LENGTH, "%s%s", list->path, curr_temp->name);
+              int type = getFileType(path);
+              if (type == FILE_TYPE_MP3 || type == FILE_TYPE_OGG) {
+                if (curr_temp == entry) {
+                  curr_audio_index = audio_idx;
+                  break;
+                }
+                audio_idx++;
+              }
+            }
+          }
+
+          // Ensure we don't pick the same song
+          if (target_index == curr_audio_index && audio_files > 1) {
+            target_index = (target_index + 1) % audio_files;
+          }
+
+          // Find target entry
+          temp_entry = list->head;
+          audio_idx = 0;
+
+          for (temp_entry = list->head; temp_entry; temp_entry = temp_entry->next) {
+            if (!temp_entry->is_folder) {
+              char path[MAX_PATH_LENGTH];
+              snprintf(path, MAX_PATH_LENGTH, "%s%s", list->path, temp_entry->name);
+              int type = getFileType(path);
+              if (type == FILE_TYPE_MP3 || type == FILE_TYPE_OGG) {
+                if (audio_idx == target_index) {
+                  entry = temp_entry;
+                  file = path;
+
+                  lrcParseClose(lyrics);
+                  endFunct();
+
+                  setAudioFunctions(type);
+
+                  initFunct(0);
+                  loadFunct((char *)file);
+                  playFunct();
+
+                  getAudioInfo(file);
+
+                  lyrics = loadLyricsFile(file,&totalms,&lyricsIndex);
+
+                  // Update positions
+                  int total_pos = 0;
+                  FileListEntry *pos_entry;
+                  for (pos_entry = list->head; pos_entry && pos_entry != entry; pos_entry = pos_entry->next) {
+                    total_pos++;
+                  }
+
+                  *base_pos = MAX(0, total_pos - MAX_POSITION / 2);
+                  *rel_pos = total_pos - *base_pos;
+
+                  break;
+                }
+                audio_idx++;
+              }
+            }
+          }
+        } else {
+          // Only one audio file, restart it (same as Repeat One)
+          lrcParseClose(lyrics);
+          endFunct();
+          initFunct(0);
+          loadFunct((char *)file);
+          playFunct();
+
+          getAudioInfo(file);
+
+          lyrics = loadLyricsFile(file,&totalms,&lyricsIndex);
+        }
+
+        continue;
       } else {
         int available = 0;
 

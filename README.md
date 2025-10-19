@@ -1,7 +1,27 @@
-# VitaShell
+# VitaShell (Unofficial Version 2.16)
+
+**⚠️ IMPORTANT: This is an unofficial version of VitaShell modified by theheroGAC**
 
 VitaShell is an alternative replacement of the PS Vita's LiveArea. It offers you a file manager, package installer, built-in FTP and much more.
 This homebrew was an entry of the Revitalize PS Vita homebrew competition and won the first prize. HENkaku's molecularShell is also based on VitaShell.
+
+## 🚀 What's New in Version 2.16 (Unofficial)
+
+### 🎮 Complete Touch Screen Support
+- **Front touch panel only** (touch screen exclusively)
+- **Precise touch navigation** without multiple selections
+- **Smooth touch scrolling** with drag and momentum
+- **Double tap for direct opening** of elements
+- **Context menu with double tap on right side**
+- **Touch context menu closing**
+- **Touch toggle in settings menu**
+
+### ⚙️ Improvements and Fixes
+- **Smooth scrolling** without jerks or bounces
+- **Complete reach** to beginning and end of list
+- **Intuitive context menu closing** with touch
+- **Optimized performance** for touch input
+- **Persistent touch configuration**
 
 ## Changelog
 See [CHANGELOG.md](CHANGELOG.md)
@@ -85,17 +105,55 @@ If your system language is for example french, it will load from `ux0:VitaShell/
 Languages files are available in the `l10n` folder of this repository.
 
 ## Building
-Install [Vita SDK](https://github.com/vitasdk) and build VitaShell using:
+
+### Official VitaShell Repository
+The official VitaShell can be found at: **https://github.com/TheOfficialFloW/VitaShell**
+
+### This Unofficial Version
+This modified version with touch support can be found at: **https://github.com/theheroGAC/VitaShell**
+
+Install [Vita SDK](https://github.com/vitasdk) and build this modified version using:
 
 ```
-git clone https://github.com/RealYoti/VitaShell
+git clone https://github.com/theheroGAC/VitaShell
 cd VitaShell/
 mkdir build && cd build && cmake .. && cd modules/kernel && make && cd ../patch && make && cd ../usbdevice && make && cd ../user && make && cd ../.. && make
 ```
 
 ## Credits
+
+### Original VitaShell Credits
+* **Original Author**: TheFloW - Creator of VitaShell
 * Team Molecule for HENkaku
 * xerpi for ftpvitalib and vita2dlib
 * wololo for the Revitalize contest
 * sakya for Lightmp3
 * Everybody who contributed on vitasdk
+
+### Version 2.16 Unofficial Credits (Modified by theheroGAC)
+* **Mod Developer**: theheroGAC - Complete touch screen implementation and multilingual enhancements
+* **Touch Screen Implementation**: Full front touch panel support with advanced features
+* **Enhanced Features**:
+  - Complete touch navigation system
+  - Smooth touch scrolling with momentum
+  - Double tap functionality for direct opening
+  - Context menu accessible via touch
+  - Touch settings toggle in main menu
+  - Precise touch-to-element mapping
+  - Performance optimized touch handling
+
+### Special Thanks
+* **Core Contributors**:
+  - TheRealYoti - Major code contributions and improvements
+  - isage - QR code scanner fix only
+* **Language Contributors**:
+  - chronoss09 - Complete French localization
+  - yyoossk - Enhanced Japanese translation
+  - theheroGAC - Complete Italian localization and touch features
+* **Beta Testers**: Community members who helped test and improve the touch functionality
+* **Open Source Community**: Thanks to all contributors and the VitaSDK team
+
+### Version 2.16 Features Summary
+This unofficial build focuses on modern touch interface implementation while maintaining full compatibility with existing VitaShell functionality. The touch system is designed to provide an intuitive and responsive experience for PS Vita users who prefer touch navigation.
+
+**⚠️ Disclaimer**: This is an unofficial modification. Use at your own risk and always backup your data before installing custom homebrew applications.

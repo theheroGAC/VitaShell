@@ -635,6 +635,9 @@ void setContextMenuMoreVisibilities() {
     menu_more_entries[MENU_MORE_ENTRY_INSTALL_ALL].visibility = CTX_INVISIBLE;
   }
 
+  // Clear install_list when refreshing context menu to prevent unwanted installations
+  fileListEmpty(&install_list);
+
   // Invisible export for non-media files
   if (!file_entry->is_folder &&
     file_entry->type != FILE_TYPE_BMP && file_entry->type != FILE_TYPE_JPEG &&
@@ -987,6 +990,9 @@ static int contextMenuMainEnterCallback(int sel, void *context) {
           message = language_container[file_entry->is_folder ? COPIED_FOLDER : COPIED_FILE];
         }
 
+        // Clear any previous titleid before showing copy message to prevent unwanted installation dialog
+        memset(last_installed_titleid, 0, sizeof(last_installed_titleid));
+
         // Copy message
         infoDialog(message, copy_list.length);
       }
@@ -1095,18 +1101,21 @@ static int contextMenuMainEnterCallback(int sel, void *context) {
       if (file_entry && !file_entry->is_folder) {
         int type = getFileType(file_entry->name);
         if (type == FILE_TYPE_VPK) {
-          // For launch app, install directly without asking and launch after
-          snprintf(cur_file, MAX_PATH_LENGTH, "%s%s", file_list.path, file_entry->name);
+          // Only launch if no dialog is currently active (user explicitly selected from context menu)
+          if (getDialogStep() == DIALOG_STEP_NONE) {
+            // For launch app, install directly without asking and launch after
+            snprintf(cur_file, MAX_PATH_LENGTH, "%s%s", file_list.path, file_entry->name);
 
-          // Clear any previous titleid to avoid confusion
-          memset(last_installed_titleid, 0, sizeof(last_installed_titleid));
+            // Clear any previous titleid to avoid confusion
+            memset(last_installed_titleid, 0, sizeof(last_installed_titleid));
 
-          // Set direct launch flag
-          is_direct_launch = 1;
+            // Set direct launch flag
+            is_direct_launch = 1;
 
-          // Start installation directly
-          initMessageDialog(MESSAGE_DIALOG_PROGRESS_BAR, language_container[INSTALLING]);
-          setDialogStep(DIALOG_STEP_INSTALL_CONFIRMED);
+            // Start installation directly
+            initMessageDialog(MESSAGE_DIALOG_PROGRESS_BAR, language_container[INSTALLING]);
+            setDialogStep(DIALOG_STEP_INSTALL_CONFIRMED);
+          }
         }
       }
 
@@ -1257,40 +1266,46 @@ static int contextMenuMoreEnterCallback(int sel, void *context) {
 
     case MENU_MORE_ENTRY_INSTALL_ALL:
     {
-      // Empty install list
-      fileListEmpty(&install_list);
+      // Only allow install all if no dialog is currently active (user explicitly selected from context menu)
+      if (getDialogStep() == DIALOG_STEP_NONE) {
+        // Empty install list
+        fileListEmpty(&install_list);
 
-      FileListEntry *file_entry = file_list.head->next; // Ignore '..'
+        FileListEntry *file_entry = file_list.head->next; // Ignore '..'
 
-      int i;
-      for (i = 0; i < file_list.length - 1; i++) {
-        char path[MAX_PATH_LENGTH];
-        snprintf(path, MAX_PATH_LENGTH, "%s%s", file_list.path, file_entry->name);
+        int i;
+        for (i = 0; i < file_list.length - 1; i++) {
+          char path[MAX_PATH_LENGTH];
+          snprintf(path, MAX_PATH_LENGTH, "%s%s", file_list.path, file_entry->name);
 
-        int type = getFileType(path);
-        if (type == FILE_TYPE_VPK) {
-          fileListAddEntry(&install_list, fileListCopyEntry(file_entry), SORT_NONE);
+          int type = getFileType(path);
+          if (type == FILE_TYPE_VPK) {
+            fileListAddEntry(&install_list, fileListCopyEntry(file_entry), SORT_NONE);
+          }
+
+          // Next
+          file_entry = file_entry->next;
         }
 
-        // Next
-        file_entry = file_entry->next;
+        strcpy(install_list.path, file_list.path);
+
+        initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[INSTALL_ALL_QUESTION]);
+        setDialogStep(DIALOG_STEP_INSTALL_QUESTION);
       }
-
-      strcpy(install_list.path, file_list.path);
-
-      initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[INSTALL_ALL_QUESTION]);
-      setDialogStep(DIALOG_STEP_INSTALL_QUESTION);
 
       break;
     }
 
     case MENU_MORE_ENTRY_INSTALL_FOLDER:
     {
-      FileListEntry *file_entry = fileListGetNthEntry(&file_list, base_pos + rel_pos);
-      if (file_entry) {
-        snprintf(cur_file, MAX_PATH_LENGTH, "%s%s", file_list.path, file_entry->name);
-        initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[INSTALL_FOLDER_QUESTION]);
-        setDialogStep(DIALOG_STEP_INSTALL_QUESTION);
+      // Only allow install folder if no dialog is currently active (user explicitly selected from context menu)
+      if (getDialogStep() == DIALOG_STEP_NONE) {
+        FileListEntry *file_entry = fileListGetNthEntry(&file_list, base_pos + rel_pos);
+        if (file_entry) {
+          snprintf(cur_file, MAX_PATH_LENGTH, "%s%s", file_list.path, file_entry->name);
+          initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[INSTALL_FOLDER_QUESTION]);
+          setDialogStep(DIALOG_STEP_INSTALL_QUESTION);
+        }
       }
 
       break;

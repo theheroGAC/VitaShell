@@ -416,8 +416,12 @@ static int handleFile(const char *file, FileListEntry *entry) {
       break;
       
     case FILE_TYPE_VPK:
-      initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[INSTALL_QUESTION]);
-      setDialogStep(DIALOG_STEP_INSTALL_QUESTION);
+      // Only show install dialog if user explicitly pressed Enter on VPK file
+      // Don't trigger during file operations like copy/move
+      if (getDialogStep() == DIALOG_STEP_NONE) {
+        initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[INSTALL_QUESTION]);
+        setDialogStep(DIALOG_STEP_INSTALL_QUESTION);
+      }
       break;
       
     case FILE_TYPE_ARCHIVE:

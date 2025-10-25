@@ -337,7 +337,8 @@ int dialogSteps() {
     {
       if (msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
         // If we just completed an installation, ask about launching app
-        if (last_installed_titleid[0] != '\0') {
+        // But only if we're not in a copy/move operation (to prevent unwanted dialog after copy)
+        if (last_installed_titleid[0] != '\0' && getDialogStep() != DIALOG_STEP_COPIED && getDialogStep() != DIALOG_STEP_MOVED) {
           initMessageDialog(SCE_MSG_DIALOG_BUTTON_TYPE_YESNO, language_container[RUN_APP_AFTER_INSTALL]);
           setDialogStep(DIALOG_STEP_RUN_APP_QUESTION);
         } else {
@@ -422,10 +423,10 @@ int dialogSteps() {
           msg_result == MESSAGE_DIALOG_RESULT_FINISHED) {
         // Empty mark list
         fileListEmpty(&mark_list);
-        
+
         // Copy copy list to mark list
         FileListEntry *copy_entry = copy_list.head;
-        
+
         int i;
         for (i = 0; i < copy_list.length; i++) {
           fileListAddEntry(&mark_list, fileListCopyEntry(copy_entry), SORT_NONE);
@@ -433,14 +434,14 @@ int dialogSteps() {
           // Next
           copy_entry = copy_entry->next;
         }
-        
+
         // Focus
         setFocusName(copy_list.head->name);
 
         // Empty copy list when moved
         if (getDialogStep() == DIALOG_STEP_MOVED)
           fileListEmpty(&copy_list);
-        
+
         // Umount and remove from clipboard after pasting
         if (pfs_mounted_path[0] &&
             !strstr(file_list.path, pfs_mounted_path) &&
@@ -448,6 +449,12 @@ int dialogSteps() {
           pfsUmount();
           fileListEmpty(&copy_list);
         }
+
+        // Clear any previous titleid to avoid confusion after copy/move operations
+        memset(last_installed_titleid, 0, sizeof(last_installed_titleid));
+
+        // Also clear install_list to prevent unwanted installations
+        fileListEmpty(&install_list);
 
         refresh = REFRESH_MODE_SETFOCUS;
         setDialogStep(DIALOG_STEP_NONE);
@@ -962,7 +969,8 @@ int dialogSteps() {
 
         // Skip success message - go directly to run app question
         // Only ask about launching if we have a valid titleid
-        if (last_installed_titleid[0] != '\0') {
+        // But not if we're in a copy/move operation (to prevent unwanted dialog after copy)
+        if (last_installed_titleid[0] != '\0' && getDialogStep() != DIALOG_STEP_COPIED && getDialogStep() != DIALOG_STEP_MOVED) {
           // If direct launch mode (come from "Launch app/game" menu), skip dialog and launch directly
           if (is_direct_launch) {
             is_direct_launch = 0; // Reset flag
@@ -973,9 +981,12 @@ int dialogSteps() {
             setDialogStep(DIALOG_STEP_RUN_APP_QUESTION);
           }
         } else {
-          // No valid titleid (shouldn't happen, but fallback)
-          setDialogStep(DIALOG_STEP_NONE);
-          is_direct_launch = 0; // Reset flag anyway
+        // No valid titleid (shouldn't happen, but fallback)
+        setDialogStep(DIALOG_STEP_NONE);
+        is_direct_launch = 0; // Reset flag anyway
+
+        // Clear install_list to prevent unwanted installations after completing installation
+        fileListEmpty(&install_list);
         }
       }
 

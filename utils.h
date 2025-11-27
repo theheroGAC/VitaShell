@@ -123,3 +123,4 @@ char *strcasestr(const char *haystack, const char *needle);
 
 // Remount storage device
 void remount(int id);
+int mount(int id, const char *path, int permission);

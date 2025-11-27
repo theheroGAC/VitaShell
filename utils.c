@@ -528,12 +528,9 @@ char *strcasestr(const char *haystack, const char *needle) {
   return boyer_moore(haystack, needle);
 }
 
-int vshIoMount(int id, const char *path, int permission, int a4, int a5, int a6) {
-  uint32_t buf[3];
-
-  buf[0] = a4;
-  buf[1] = a5;
-  buf[2] = a6;
+int mount(int id, const char *path, int permission) {
+  char buf[0x100];
+  memset(buf, 0x00, sizeof(buf));
 
   return _vshIoMount(id, path, permission, buf);
 }
@@ -541,5 +538,5 @@ int vshIoMount(int id, const char *path, int permission, int a4, int a5, int a6)
 void remount(int id) {
   vshIoUmount(id, 0, 0, 0);
   vshIoUmount(id, 1, 0, 0);
-  vshIoMount(id, NULL, 0, 0, 0, 0);
+  mount(id, NULL, 0);
 }

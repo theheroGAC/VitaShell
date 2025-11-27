@@ -507,7 +507,7 @@ int dialogSteps() {
           setDialogStep(DIALOG_STEP_NONE);
           
           if (checkFileExist("sdstor0:uma-lp-act-entire")) {
-            int res = _vshIoMount(0xF00, NULL, 0, NULL);
+            int res = mount(0xF00, NULL, 0);
             if (res < 0)
               errorDialog(res);
             else

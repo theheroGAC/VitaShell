@@ -726,7 +726,7 @@ static int contextMenuHomeEnterCallback(int sel, void *context) {
         infoDialog(language_container[EXTENDED_PERMISSIONS_REQUIRED]);
       } else {
         if (checkFileExist("sdstor0:uma-lp-act-entire")) {
-          int res = _vshIoMount(0xF00, NULL, 0, NULL);
+          int res = mount(0xF00, NULL, 0);
           if (res < 0)
             errorDialog(res);
           else
@@ -746,7 +746,7 @@ static int contextMenuHomeEnterCallback(int sel, void *context) {
       if (is_safe_mode) {
         infoDialog(language_container[EXTENDED_PERMISSIONS_REQUIRED]);
       } else {
-        int res = _vshIoMount(0xD00, NULL, 2, NULL);
+        int res = mount(0xD00, NULL, 2);
         if (res < 0)
           errorDialog(res);
         else
@@ -762,7 +762,7 @@ static int contextMenuHomeEnterCallback(int sel, void *context) {
       if (is_safe_mode) {
         infoDialog(language_container[EXTENDED_PERMISSIONS_REQUIRED]);
       } else {
-        int res = _vshIoMount(0xE00, NULL, 2, NULL);
+        int res = mount(0xE00, NULL, 2);
         if (res < 0)
           errorDialog(res);
         else

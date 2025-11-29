@@ -21,6 +21,8 @@
 #include <psp2kern/kernel/sysmem.h>
 #include <psp2kern/kernel/threadmgr.h>
 #include <psp2kern/io/fcntl.h>
+#include <psp2kern/kernel/debug.h>
+
 
 #include <stdio.h>
 #include <string.h>
@@ -73,6 +75,10 @@ static SceUID hookid = -1;
 static tai_hook_ref_t ksceSysrootIsSafeModeRef;
 
 static tai_hook_ref_t ksceSblAimgrIsDolceRef;
+
+static SceUID otgHookId = -1;
+
+static tai_hook_ref_t ksceSysconSetOtgPowerLevelHookRef;
 
 static int ksceSysrootIsSafeModePatched() {
   return 1;
@@ -262,6 +268,20 @@ int shellKernelGetRifVitaKey(const void *license_buf, void *klicensee) {
   return res;
 }
 
+SceUID ksceSysconSetOtgPowerLevelPatched(uint32_t *pwr_val) {
+    SceUID res, state;
+    ENTER_SYSCALL(state);
+    
+    res = TAI_CONTINUE(SceUID, ksceSysconSetOtgPowerLevelHookRef, pwr_val);
+    
+    if(pwr_val != NULL && *pwr_val == 0x700) {
+        *pwr_val = 0x200;        
+    }
+    
+    EXIT_SYSCALL(state);
+    return res;
+}
+
 void _start() __attribute__ ((weak, alias("module_start")));
 int module_start(SceSize args, void *argp) {
   SceUID tmp1, tmp2;
@@ -316,25 +336,29 @@ int module_start(SceSize args, void *argp) {
 
   // Load SceUsbMass
   SceUID modid = ksceKernelLoadStartModule("ux0:VitaShell/module/umass.skprx", 0, NULL, 0, NULL, NULL);
-
+  
   // Release patch
   taiHookReleaseForKernel(tmp1, ksceSysrootIsSafeModeRef);
   taiHookReleaseForKernel(tmp2, ksceSblAimgrIsDolceRef);
 
   // Check result
-  if (modid < 0)
+  if (modid < 0 && modid != 0x8002d021) // check continue even if already loaded
     return SCE_KERNEL_START_SUCCESS;
 
   // Fake safe mode in SceUsbServ
   hookid = taiHookFunctionImportForKernel(KERNEL_PID, &ksceSysrootIsSafeModeRef, "SceUsbServ",
                                           0x2ED7F97A, 0x834439A7, ksceSysrootIsSafeModePatched);
-
+  
+  // Enable any OTG Cable to be used.
+  otgHookId = taiHookFunctionImportForKernel(KERNEL_PID, &ksceSysconSetOtgPowerLevelHookRef, "SceUsbServ",
+                                            0x60A35F64, 0xD6F6D472, ksceSysconSetOtgPowerLevelPatched);
   return SCE_KERNEL_START_SUCCESS;
 }
 
 int module_stop(SceSize args, void *argp) {
   if (hookid >= 0)
     taiHookReleaseForKernel(hookid, ksceSysrootIsSafeModeRef);
-
+  if (otgHookId >= 0)
+    taiHookReleaseForKernel(otgHookId, ksceSysconSetOtgPowerLevelHookRef);
   return SCE_KERNEL_STOP_SUCCESS;
 }

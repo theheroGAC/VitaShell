@@ -78,7 +78,7 @@ int network_update_thread(SceSize args, void *argp) {
         int minor = (version >> 0x10) & 0xFF;
 
         char version_string[8];
-        sprintf(version_string, "%X.%02X", major, minor);
+        sprintf(version_string, "%d.%02d", major, minor);
         if (version_string[3] == '0')
           version_string[3] = '\0';
 

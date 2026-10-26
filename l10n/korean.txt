@@ -222,3 +222,4 @@ UPDATE_QUESTION                      = "VitaShell %s을(를) 사용할 수 있�
 ARCHIVE_NAME                         = "아카이브 이름"
 COMPRESSION_LEVEL                    = "압축 레벨 (0-9)"
 ENTER_PASSWORD                       = "암호 입력"
+LANGUAGE_CHANGED_RESTART_MSG         = "언어가 변경되었습니다. 적용하려면 VitaShell을 다시 시작하세요."

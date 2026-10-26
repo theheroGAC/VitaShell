@@ -221,4 +221,5 @@ FTP_SERVER							 = "FTP-сервер доступен по адресу:\ftp://
 UPDATE_QUESTION 					 = "Сетевое обновление:\\Для установки доступна VitaShell %s.\\Выполнить обновление?"
 ARCHIVE_NAME						 = "Имя архива"
 COMPRESSION_LEVEL					 = "Уровень сжатия (0-9)"
-ENTER_PASSWORD						 = "Введите пароль"LANGUAGE_CHANGED_RESTART_MSG = "Язык изменён. Перезапустите VitaShell для применения."
+ENTER_PASSWORD						 = "Введите пароль"
+LANGUAGE_CHANGED_RESTART_MSG         = "Язык изменён. Перезапустите VitaShell для применения."

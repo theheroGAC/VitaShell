@@ -222,3 +222,4 @@ UPDATE_QUESTION 					 = "Сетевое обновление:\\Для устан
 ARCHIVE_NAME						 = "Имя архива"
 COMPRESSION_LEVEL					 = "Уровень сжатия (0-9)"
 ENTER_PASSWORD						 = "Введите пароль"
+LANGUAGE_CHANGED_RESTART_MSG         = "Язык изменён. Перезапустите VitaShell для применения."
